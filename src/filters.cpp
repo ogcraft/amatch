@@ -1,10 +1,3 @@
-/* -*-  Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
-
-/*
-Author: Yan Ke
-August 2004
-*/
-
 #include <assert.h>
 #include <stdarg.h>
 #include <iostream>
@@ -128,7 +121,7 @@ vector<Filter> readFilters(char * fn) {
 		*/
 	}
 
-	printf("Read %d filters.\n", filters.size());
+	//printf("Read %lu filters.\n", filters.size());
 
 	fclose(f);
 
@@ -156,8 +149,6 @@ vector<Filter> prepare_filters(const char* fstr[], size_t sz)
 		}
 		
 	}
-
-	printf("Prepared %d filters.\n", filters.size());
-
+	//printf("Prepared %lu filters.\n", filters.size());
 	return filters;
 }

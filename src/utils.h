@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <math.h>
 
 #include <sndfile.h>
 //#include <armadillo>
@@ -15,13 +16,25 @@
 #define MIN(x,y)    ((x) < (y) ? (x) : (y))
 
 #ifdef _WIN32
-//float round(float x)
-//{
-//   return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
-//}
 static inline double round(double val)
 {    
     return floor(val + 0.5);
+}
+#endif
+
+#ifdef _WIN32
+
+#include <intrin.h>
+inline unsigned int bit_count(unsigned int x)
+{
+    //return std::bitset<32>(x).count();
+    return __popcnt(x);
+}
+#else
+unsigned int bit_count(unsigned int x)
+{
+    //return std::bitset<32>(x).count();
+	return __builtin_popcount(x);
 }
 #endif
 

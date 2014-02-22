@@ -5,13 +5,10 @@
 #include <memory>
 #include <string>         // std::string
 #include <bitset>         // std::bitset
-
 #include <sndfile.h>
-//#include "armadillo"
 #include "utils.h"
 #include "sigproc.h"
 
-//using namespace arma;
 using namespace std;
 
 const char* filters1[] = 
@@ -133,8 +130,6 @@ int test1(const string& wavfn)
 int main(int argc, char* argv[])
 {
 	int ret = 0;
-
-//	std::cout << "Armadillo version: " << arma_version::as_string() << std::endl;
 	char  sndflile_ver [128] ;
 	sf_command (NULL, SFC_GET_LIB_VERSION, sndflile_ver, sizeof (sndflile_ver)) ;
 	std::cout << "Sndfile version: " << sndflile_ver << std::endl << std::endl;

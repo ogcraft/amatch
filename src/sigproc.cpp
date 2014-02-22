@@ -11,6 +11,7 @@ August 2004
 #include <bitset>
 #include <sndfile.h>
 #include <stdint.h>
+#include <math.h>
 
 using namespace std;
 
