@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 2.6) 
 project (amatch)
 
-message( STATUS "amatch dir: " ${PROJECT_SOURCE_DIR} )
+set(AMATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+
+message( STATUS "amatch dir: " ${AMATCH_DIR} )
 
 if(WIN32)
     set(CMAKE_CXX_LINKER "${VCINSTALLDIR}/VC/bin/link.exe")
@@ -16,16 +18,20 @@ if(WIN32)
 #SET(CMAKE_C_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY}")
 #SET(CMAKE_C_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_LIBRARY}")
 
-	include_directories ( ${AMATCH_DIR}/include )
+	include_directories ( ${AMATCH_DIR}/src ${AMATCH_DIR}/include )
+    link_directories    ( ${AMATCH_DIR}/lib/win32 )
+
+else(WIN32)
+
+    link_directories    ( ${AMATCH_DIR}/lib )
 
 endif(WIN32)
 
 
-set(AMATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
-
-link_directories    ( ${AMATCH_DIR}/lib )
-
-add_library(amatch
+add_library( libamatch
+    include/amatch.h
+    src/asearch.cpp
+    src/amatch.cpp
 	src/utils.h
 	src/utils.cpp
 	src/sigproc.h
@@ -34,33 +40,32 @@ add_library(amatch
 	src/filters.cpp
 )
 
-#add_executable (asearch 
-#	asearch.cpp 
-#	utils.cpp
-#	sigproc.cpp
-#	filters.cpp
-#    )
+add_executable (generate_fpkeys 
+	bin/generate_fpkeys.cpp 
+    )
 
-#add_executable (amatch 
-#	amatch.cpp 
-#	)
+add_executable (amatch 
+	bin/amatch_main.cpp 
+    )
 
-#if(WIN32)
-#	target_link_libraries (generate_pfkeys 
-#		libfftw3-3
-#		libsndfile-1.lib 
-#		#samplerate 
-#		#armadillo 
-#		#boost_iostreams 
-#		#boost_system 
-#		)
-#else(WIN32)
-#	target_link_libraries ( generate_pfkeys
-#		fftw3
-#		sndfile 
-#		#samplerate 
-#		#armadillo 
-#		#boost_iostreams 
-#		#boost_system 
-#		)   
-#endif(WIN32)
+target_link_libraries ( amatch
+        libamatch.lib
+        )   
+if(WIN32)
+    target_link_libraries ( generate_fpkeys
+            libamatch.lib
+            libfftw3-3 # win32
+            libsndfile-1.lib # win32 
+            #boost_iostreams 
+            #boost_system 
+            )   
+else(WIN32)
+    target_link_libraries ( generate_fpkeys
+            libamatch.lib
+            fftw3
+            sndfile 
+            #boost_iostreams 
+            #boost_system 
+            )   
+endif(WIN32)
+
