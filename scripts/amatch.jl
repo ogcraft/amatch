@@ -37,13 +37,14 @@ end
 
 function calc_dist(start_pos, record_keys, sample_keys, nsec, shift_sec)
 	w = nsec * keys_in_sec
-    shift = shift_sec * keys_in_sec
+    shift = int(shift_sec * keys_in_sec)
     acc = 0
 	for i = 1:w
 		d =  count_ones(record_keys[start_pos+i] $ sample_keys[i+shift]) # xor
 		acc = acc + d
 	end	
-	return int(acc/w)
+    #println("start_pos: ", start_pos," w: ", w, " acc/w: ", acc/w)
+    return w/acc
 end
 
 function match_old(record_fn, sample_fn, nsec)
@@ -69,25 +70,6 @@ function match_old(record_fn, sample_fn, nsec)
     return diffs, diffs1
 end
 
-function match_single_pass(record_keys, sample_keys, nsec, sec)
-    nrecords = length(record_keys)
-    nsamples = length(sample_keys)
-    diffs = fill(33, nrecords)
-    for i = 1:(nrecords-(nsec+1) * keys_in_sec)
-	    diffs[i] = calc_dist(i, record_keys, sample_keys, nsec, 0)
-    end
-    @printf "Collected %d diffs\n"  length(diffs)
-    m,index=findmin(diffs)
-    @printf "Found sec: %f min: %d index: %d \n" index*sec_per_sample m index
-    diff_in_secs = (sec - index * sec_per_sample)
-    @printf "Diff secs_diff: %f "  diff_in_secs
-    if abs(diff_in_secs) > 1
-        @printf " ====== Not Found\n"
-    else
-        @printf "\n"
-    end
-    return diffs
-end
 function match1(record_keys, sample_keys, nsec, sec)
     nrecords = length(record_keys)
     nsamples = length(sample_keys)
@@ -129,15 +111,69 @@ function match(record_fn, sample_fn, nsec)
         #@printf "start_sample: %d from end: %d\n" start_sample from_end_of_record
         @printf "Looking for sec: %f (%d) from total: %f\n" start_sample * sec_per_sample start_sample nsamples * sec_per_sample
 
-        diff =  match_single_pass(record_keys, sample_keys[start_sample:end], nsec, start_sample * sec_per_sample)
+        #diff =  match_single_pass(record_keys, sample_keys[start_sample:end], nsec, start_sample * sec_per_sample)
 
         start_sample += sample_size
         from_end_of_record = (nsamples - 10) - (start_sample + sample_size)
         i += 1
     end
 end
+    
+function match_single_pass(track_keys, sample_keys, secs_to_match, track_ssec)
+    ntrack_keys = length(track_keys)
+    nsamples = length(sample_keys)
+    println()
+    keys_to_match = secs_to_match * keys_in_sec
+    max_track_pos = ntrack_keys - keys_to_match + 1
+    println("max_record_pos: ", max_track_pos)
+    diffs = fill(0.0, max_track_pos)
+    for i = 1 : max_track_pos-500
+	    d = calc_dist(i, track_keys, sample_keys, secs_to_match, 0)
+        diffs[i] = d
+        #if(d < 10) println("i: ", i, " d: ",d ); end
+    end
+    @printf "Collected %d diffs\n"  length(diffs)
+    m,index=findmax(diffs)
+    @printf "Found sec: %f minimum: %f index: %d \n" (track_ssec + index * sec_per_sample) m index
+    return diffs
+end
+
+function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec, sample_esec, sample_sshift_secs, secs_to_match)
+    @printf "match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n" track_ssec  track_ssec * keys_in_sec track_esec  track_esec * keys_in_sec  
+    @printf "match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n" sample_ssec  sample_ssec * keys_in_sec sample_esec  sample_esec * keys_in_sec  
+    @printf "\n--------------------------------\n" 
+    sample_spos = (sample_ssec + sample_sshift_secs) * keys_in_sec + 1
+    sample_epos = sample_esec * keys_in_sec
+    @printf "Looking for sec: %fsec (%d) from total: %fsec (%d)\n" sample_spos * sec_per_sample sample_spos sample_esec sample_esec * keys_in_sec
+    track_spos = int(track_ssec) * keys_in_sec + 1
+    track_epos = int(track_esec - 10) * keys_in_sec
+    println("track_spos: ", track_spos, ", track_epos: ", track_epos)
+    println("sample_spos: ", sample_spos, ", sample_epos: ", sample_epos)
+    diff =  match_single_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+end
+
 
 function test1()
     match(recordkfn, fullsamplekfn, 3)
+end
+
+function test_sample(nsecs_to_match)
+   # try
+        track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-x.fpkey"
+        track = read_keys_from_file(track_fn)
+        sample = read_keys_from_file(sample_fn)
+        nrecords = length(track)
+        nsamples = length(sample)
+        @printf "Read keys: %d from: %s secs: %f\n"  nrecords track_fn nrecords * sec_per_sample
+        @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
+        
+        match_single_sample(track, sample, 
+            3000.0 , (nrecords - nsamples + 1) * sec_per_sample, 
+            0, 20.0, 
+            0, nsecs_to_match)
+    #catch e
+    #    println(e)
+    #end
 end
 
