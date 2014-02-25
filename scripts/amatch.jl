@@ -138,7 +138,7 @@ function process_diffs(in_diffs)
     avg = mean(in_diffs)
     diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
     m,index=findmax(diffs)
-    diffs = map((x)-> x > m/2.0 ? x : 0.0, diffs)
+    #diffs = map((x)-> x > m/2.0 ? x : 0.0, diffs)
     return diffs, m, index
 end
 
@@ -183,7 +183,7 @@ function match_double_pass(track_keys, sample_keys, secs_to_match, track_ssec)
     diffs2 = fill(0.0, max_track_pos)
     print("Doing: ")
     for i = 1 : max_track_pos-500
-        if( i % 1000 == 0 ) print(" ", i) end
+        if( i % 5000 == 0 ) print(" ", i) end
 	    d1, d2 = calc_dist_double(i, track_keys, sample_keys, secs_to_match, 0, 10)
         diffs1[i] = d1
         diffs2[i] = d2
@@ -213,7 +213,7 @@ function match_single_pass(track_keys, sample_keys, secs_to_match, track_ssec)
     diffs2 = fill(0.0, max_track_pos)
     print("Doing: ")
     for i = 1 : max_track_pos-500
-        if( i % 1000 == 0 ) print(" ", i) end
+        if( i % 5000 == 0 ) print(" ", i) end
 	    d = calc_dist(i, track_keys, sample_keys, secs_to_match, 0)
         diffs1[i] = d
     end
@@ -246,7 +246,7 @@ end
 function test_sample(nsecs_to_match)
    # try
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-0.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-x.fpkey"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -255,7 +255,7 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         
         match_single_sample(track, sample, 
-            0 , 200, #(nrecords - nsamples + 1) * sec_per_sample, 
+            0 , (nrecords - nsamples + 1) * sec_per_sample, 
             1, 20.0, 
             0, nsecs_to_match)
     #catch e

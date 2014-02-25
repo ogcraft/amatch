@@ -28,7 +28,7 @@ else(WIN32)
 endif(WIN32)
 
 
-add_library( libamatch
+add_library( libamatch STATIC 
     include/amatch.h
     src/asearch.cpp
     src/amatch.cpp
@@ -40,17 +40,32 @@ add_library( libamatch
 	src/filters.cpp
 )
 
+add_executable (amatch_sample 
+	bin/amatch_sample.cpp 
+    )
+
+target_link_libraries ( amatch_sample
+        libamatch
+        )   
+
 add_executable (generate_fpkeys 
 	bin/generate_fpkeys.cpp 
     )
-
-add_executable (amatch 
-	bin/amatch_main.cpp 
-    )
-
-target_link_libraries ( amatch
+target_link_libraries ( generate_fpkeys
         libamatch.lib
         )   
+
+#add_executable (amatch 
+#	bin/amatch_main.cpp 
+#    )
+
+#target_link_libraries ( amatch
+#        libamatch.lib
+#        )   
+
+        
+#add_dependencies(amatch_sample amatch)
+
 if(WIN32)
     target_link_libraries ( generate_fpkeys
             libamatch.lib
