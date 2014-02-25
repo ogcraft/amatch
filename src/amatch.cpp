@@ -47,10 +47,10 @@ void calc_dist_double(size_t start_pos, key_const_iterator& track_begin, key_con
     unsigned int shift2 = (unsigned int)(shift_sec2 * keys_in_sec);
     unsigned int acc1 = 32;
     unsigned int acc2 = 32;
-    printf("w: %d\n");
+    //printf("w: %d nsec: %f\n", w, nsec);
     for(size_t i = 0; i < w; i++) {
-		acc1 += 32;//bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift1));
-		acc2 += 32;//bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift2));
+		acc1 += bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift1));
+		acc2 += bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift2));
 	}
     d1 = w/acc1;
     d2 = w/acc2;
@@ -133,6 +133,7 @@ void match_double_pass(key_const_iterator& track_begin, key_const_iterator& trac
         diffs1.push_back(std::make_pair(d1,i));
         diffs2.push_back(std::make_pair(d2,i));
     }
+    printf("\n");
     printf("Calculating diffs1:%lu diffs2:%lu\n", diffs1.size(), diffs2.size());
 }
 
