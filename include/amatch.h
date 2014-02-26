@@ -14,7 +14,7 @@ typedef std::vector< std::pair<int, int> > diff_vector1;
 typedef std::pair<double, int> diff_type;
 typedef std::vector< diff_type > diff_vector;
 
-#define keys_in_sec 86
+#define keys_in_sec (86)
 #define sec_per_sample ((double) 0.01164) 
 
 unsigned int bit_count(unsigned int x);

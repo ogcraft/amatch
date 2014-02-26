@@ -42,5 +42,6 @@ unsigned int bit_count(unsigned int x)
 //void spectrogram(const arma::mat& S, int window_sz, int hop_sz, arma::mat& result);
 void writebits(unsigned int bits[], unsigned int nbits, const char * fn);
 
+double time_now();
 
 #endif // __utils_h__

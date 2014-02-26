@@ -1,4 +1,27 @@
 #include "utils.h"
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/time.h> 
+#endif
+
+double time_now()
+{
+#ifdef _WIN32
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    unsigned long long tt = ft.dwHighDateTime;
+    tt <<=32;
+    tt |= ft.dwLowDateTime;
+    tt /=10;
+    tt -= 11644473600000000ULL;
+    return ( double) tt / 1000000.0;
+#else
+    struct timeval tv;
+    gettimeofday(&tv,0);
+    return 0.0; //ptime(tv.tv_sec,tv.tv_usec * 1000);
+#endif
+}
 
 //using namespace arma;
 #if 0

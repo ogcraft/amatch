@@ -47,7 +47,6 @@ void process_diffs(diff_vector& diffs, double& m, unsigned& i)
     
     diff_type sum = std::accumulate(all(diffs), std::make_pair(0.0,0), use_diff_value);
     m = sum.first / diffs.size();
-    printf("m: %f\n", m);
     //diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
     std::transform (diffs.begin(), diffs.end(), diffs.begin(), normalize_diff(m) );
     //m,index=findmax(diffs)
@@ -190,8 +189,11 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
                         double sample_sshift_secs, double secs_to_match)
 {
     bool ret = true;
-    printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", track_ssec, track_ssec * keys_in_sec, track_esec, track_esec * keys_in_sec);  
-    printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", sample_ssec, sample_ssec * keys_in_sec, sample_esec, sample_esec * keys_in_sec);  
+    printf("keys_in_sec: %d\n", keys_in_sec);
+    printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
+        track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
+    printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
+        sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
     printf("\n--------------------------------\n"); 
     unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
     unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);

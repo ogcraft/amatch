@@ -147,8 +147,8 @@ function process_diffs1(in_diffs)
     diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
     m = 0
     index = 0
-    w = 100
-    for i=1:length(diffs - w)
+    w = 500
+    for i=1:(length(diffs) - w)
         if(i<=w) 
             continue
         end
@@ -157,11 +157,54 @@ function process_diffs1(in_diffs)
         dr=diffs[i+100]
         dm = ( dl + dr )/2
         p = d - dm
-        if(p > 0)
-            println("p:", p)
+        if(p > 2*dm)
+            println("i:", i, "p:", p)
         end
     end
     return diffs, m, index
+end
+
+function linear_inter(x0, y0, x1, y1, x)
+    return y0 = (y1-y0)*(x-x0)/(x1-x0)
+end
+function FWHM(X,Y)
+    half_max = max(Y) / 2.0
+    #find when function crosses line half_max (when sign of diff flips)
+    #take the 'derivative' of signum(half_max - Y[])
+    d = sign(half_max - array(Y[1:end-1])) - sign(half_max - array(Y[2:end]))
+    #plot(X,d) #if you are interested
+    #find the left and right most indexes
+    left_idx = find(d > 0)[0]
+    right_idx = find(d < 0)[-1]
+    return X[right_idx] - X[left_idx] #return the difference (full width)
+end
+
+#function process_peak(xs, w)
+#    hw= w / 2
+#    m = find(max
+#end
+
+function process_diffs2(in_diffs, w)
+    avg = mean(in_diffs)
+    diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
+    m = 0
+    index = 0
+    n = length(diffs) - 2*w
+    ps = fill(0.0, n)
+    runm = 0
+    for i=1:n
+        if(i<=w) 
+            continue
+        end
+        d = diffs[i]
+        dl=diffs[i-w]
+        dr=diffs[i+w]
+        dm = ( dl + dr )/2
+        p = d - dm
+        ps[i]= abs(p)
+    end
+    m, index = findmax(ps)
+    return diff,m,index
 end
 
 function match_double_pass(track_keys, sample_keys, secs_to_match, track_ssec)
@@ -210,9 +253,9 @@ function match_double_pass1(track_keys, sample_keys, secs_to_match, track_ssec)
         diffs2[i] = d2
     end
     println()
-    @printf "1 Collected %d diffs\n"  length(diffs1)
-    diffs1, m1, index1 = process_diffs1(diffs1)
-    diffs2, m2, index2 = process_diffs1(diffs2)
+    @printf "Collected %d diffs\n"  length(diffs)
+    diffs1, m1, index1 = process_diffs2(diffs1, 100)
+    diffs2, m2, index2 = process_diffs2(diffs2, 100)
     sec1 =  (track_ssec + index1 * sec_per_sample)
     sec2 =  (track_ssec + index2 * sec_per_sample) 
     @printf "Found sec1: %f max1: %f i1: %d | sec2: %f max2: %f i2: %d\n" sec1 m1 index1 sec2 m2 index2 
@@ -256,20 +299,20 @@ function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec,
     println("track_spos: ", track_spos, ", track_epos: ", track_epos)
     println("sample_spos: ", sample_spos, ", sample_epos: ", sample_epos)
     #diff1, diff2 =  match_single_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
-    #diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
-    diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    #diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
 end
 
-function test1()
-    match(recordkfn, fullsamplekfn, 3)
-end
+#function test1()
+#    match(recordkfn, fullsamplekfn, 3)
+#end
 
 mi1 = 5012
 
 function test_sample(nsecs_to_match)
    # try
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-4500.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-x.fpkey"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -278,7 +321,7 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         
         match_single_sample(track, sample, 
-            4450 , 4600, #(nrecords - nsamples + 1) * sec_per_sample, 
+            0.1 , (nrecords - nsamples + 1) * sec_per_sample, 
             1, 20.0, 
             0, nsecs_to_match)
     #catch e
