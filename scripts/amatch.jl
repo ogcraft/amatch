@@ -253,9 +253,10 @@ function match_double_pass1(track_keys, sample_keys, secs_to_match, track_ssec)
         diffs2[i] = d2
     end
     println()
-    @printf "Collected %d diffs\n"  length(diffs)
+    @printf "Collected %d diffs\n"  length(diffs1)
     diffs1, m1, index1 = process_diffs2(diffs1, 100)
-    diffs2, m2, index2 = process_diffs2(diffs2, 100)
+    diffs2, m2, index2 = process_diffs2(diffs2[index1:end], 100)
+    index2 += index1
     sec1 =  (track_ssec + index1 * sec_per_sample)
     sec2 =  (track_ssec + index2 * sec_per_sample) 
     @printf "Found sec1: %f max1: %f i1: %d | sec2: %f max2: %f i2: %d\n" sec1 m1 index1 sec2 m2 index2 
@@ -299,8 +300,8 @@ function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec,
     println("track_spos: ", track_spos, ", track_epos: ", track_epos)
     println("sample_spos: ", sample_spos, ", sample_epos: ", sample_epos)
     #diff1, diff2 =  match_single_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
-    diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
-    #diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    #diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
 end
 
 #function test1()
@@ -312,7 +313,7 @@ mi1 = 5012
 function test_sample(nsecs_to_match)
    # try
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-x.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-4500.fpkey"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -321,7 +322,7 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         tic() 
         diffs1, diffs2 = match_single_sample(track, sample, 
-            0.1 , 7300.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
+            0.1 , 7000.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
             1, 20.0, 
             0, nsecs_to_match)
         toc()
