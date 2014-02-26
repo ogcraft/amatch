@@ -1,7 +1,22 @@
 cmake_minimum_required (VERSION 2.6) 
 project (amatch)
 
+set (CMAKE_BUILD_TYPE Debug)
+#set (CMAKE_BUILD_TYPE Release)
+
 set(AMATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+
+if (MSVC)
+        add_definitions (/wd4996 /D "_CRT_SECURE_NO_WARNINGS")
+endif (MSVC)
+
+
+#find_package(Boost)
+# If Boost is not found then Boost_INCLUDE_DIRS will be set
+# to "NOTFOUND" which will make CMake complain on Windows.
+# if (BOOST_FOUND)
+#   set (BOOST_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
+#endif (BOOST_FOUND)
 
 message( STATUS "amatch dir: " ${AMATCH_DIR} )
 

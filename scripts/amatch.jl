@@ -246,7 +246,7 @@ end
 function test_sample(nsecs_to_match)
    # try
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-x.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-4500.fpkey"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -255,7 +255,7 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         
         match_single_sample(track, sample, 
-            0 , (nrecords - nsamples + 1) * sec_per_sample, 
+            4400 , 4600, #(nrecords - nsamples + 1) * sec_per_sample, 
             1, 20.0, 
             0, nsecs_to_match)
     #catch e

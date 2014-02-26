@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     printf("Sample size secs: %f keys: %d\n", sample_size_secs, sample_size_keys);
 
     match_single_sample(track_keys, sample_keys, 
-            /* start sec of track */ 4000, /* end sec of track*/ 4600, //(nrecords - nsamples + 1) * sec_per_sample, 
+            /* start sec of track */ 0, /* end sec of track*/ (nrecords - nsamples + 1) * sec_per_sample, 
             1.0, sample_size_secs, 
             0, nsecs_to_match);
  

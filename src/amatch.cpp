@@ -7,22 +7,53 @@
 #include <bitset>
 #include <map>
 #include <math.h>
+#include <functional>   
+#include <numeric>      // std::accumulate
+
 #include "utils.h"
 #include "amatch.h"
 
 #define all(C) C.begin(),C.end()
+#define PRINTDIFFVEC( v ) {diff_vector::iterator it;for(it=v.begin();it!=v.end();++it){std::cout << it->first <<","<<it->second<<" ";};std::cout<<std::endl;}
 
-std::pair<int,int> min_diffs(const diff_vector1& diffs)
+
+bool less_by_diff_value(diff_type x, diff_type y)
 {
-	std::pair<int,int> m = std::make_pair(10000,0);
-	for(diff_vector1::const_iterator it = diffs.begin();
-			it != diffs.end(); ++it) {
-		if(it->first < m.first) {
-			m.first = it->first;
-			m.second = it->second;
-		}
-	}
-	return m;
+    return x.first < y.first;
+}
+
+diff_type use_diff_value(diff_type x, diff_type y)
+{
+    //printf(" %f,%f", x.first, y.first);
+    return std::make_pair(x.first + y.first, 0);
+}
+
+class normalize_diff
+{
+   private:
+      double _m; 
+   public:
+      normalize_diff(double m):_m(m){}
+      diff_type operator() ( diff_type& elem ) const 
+      {
+        elem.first -= _m;
+         return elem;
+      }
+};
+
+void process_diffs(diff_vector& diffs, double& m, unsigned& i)
+{
+    //avg = mean(in_diffs)
+    
+    diff_type sum = std::accumulate(all(diffs), std::make_pair(0.0,0), use_diff_value);
+    m = sum.first / diffs.size();
+    printf("m: %f\n", m);
+    //diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
+    std::transform (diffs.begin(), diffs.end(), diffs.begin(), normalize_diff(m) );
+    //m,index=findmax(diffs)
+    diff_type dm = *std::max_element(all(diffs),less_by_diff_value);
+    m = dm.first;
+    i = dm.second;
 }
 
 int calc_dist(size_t start_pos, const  key_vector& record_keys, const  key_vector& sample_keys,  size_t sample_key_start, int nsec, int shift_sec)
@@ -49,11 +80,14 @@ void calc_dist_double(size_t start_pos, key_const_iterator& track_begin, key_con
     unsigned int acc2 = 32;
     //printf("w: %d nsec: %f\n", w, nsec);
     for(size_t i = 0; i < w; i++) {
-		acc1 += bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift1));
-		acc2 += bit_count(*(track_begin + start_pos+i) ^ *(sample_begin + i + shift2));
+        uint32_t t = *(track_begin + start_pos+i);
+        uint32_t s1 = *(sample_begin + i + shift1);
+        uint32_t s2 = *(sample_begin + i + shift2);
+		acc1 += bit_count( t ^ s1 );
+		acc2 += bit_count( t ^ s2 );
 	}
-    d1 = w/acc1;
-    d2 = w/acc2;
+    d1 = ((double)w)/acc1;
+    d2 = ((double)w)/acc2;
 }
 
 size_t read_keys_from_file(const std::string& filename, key_vector& keys)
@@ -95,7 +129,7 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
     
     printf("Collected %d diffs i: %d\n", diffs.size(), i);
     
-    std::pair<int,int> dp = min_diffs(diffs);
+    std::pair<int,int> dp = std::make_pair(0,0);//min_diffs(diffs);
     
     int m = dp.first;
     int index = dp.second;
@@ -130,11 +164,24 @@ void match_double_pass(key_const_iterator& track_begin, key_const_iterator& trac
         double d2 = 0;
         calc_dist_double(i, track_begin, track_end, sample_begin, sample_end, 
                       secs_to_match, 0, 10, d1, d2);
+        //printf(" d1:%f,d2:%f", d1, d2);
         diffs1.push_back(std::make_pair(d1,i));
         diffs2.push_back(std::make_pair(d2,i));
     }
     printf("\n");
     printf("Calculating diffs1:%lu diffs2:%lu\n", diffs1.size(), diffs2.size());
+    double m1 = 0.0;
+    unsigned i1 = 0;
+    process_diffs(diffs1, m1, i1);
+    double m2 = 0.0;
+    unsigned i2 = 0;
+    process_diffs(diffs2, m2, i2);
+    double sec1 =  (track_ssec + i1 * sec_per_sample);
+    double sec2 =  (track_ssec + i2 * sec_per_sample); 
+    printf("Found sec1: %f max1: %f i1: %d | sec2: %f max2: %f i2: %d\n",sec1, m1, i1, sec2, m2, i2); 
+    int di = i2-i1;
+    double ds = (double)di * sec_per_sample;
+    printf("Diff in secs: %f(%d) relative: %f\n", ds, di, (10.0-ds)/10.0);
 }
 
 bool match_single_sample(const key_vector& track, const key_vector& sample, 
@@ -151,8 +198,8 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
     printf("Looking for sec: %fsec (%d) from total: %fsec (%d)\n", sample_spos * sec_per_sample, sample_spos, sample_esec, sample_esec * keys_in_sec);
     unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
-    printf("track_spos: %d track_epos: %d\n", track_spos, track_epos);
-    printf("sample_spos: %d sample_epos: %d\n", sample_spos, sample_epos);
+    printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
+    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_spos, sample_epos);
     diff_vector diff1;
     diff_vector diff2;
     match_double_pass(track.begin() + track_spos, track.begin() + track_epos, 
