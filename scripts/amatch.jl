@@ -189,7 +189,7 @@ function process_diffs2(in_diffs, w)
     diffs = map((x)-> x>avg ? x - avg : 0.0, in_diffs)
     m = 0
     index = 0
-    n = length(diffs) - 2*w
+    n = length(diffs) - 2*w - 1
     ps = fill(0.0, n)
     runm = 0
     for i=1:n
@@ -204,7 +204,7 @@ function process_diffs2(in_diffs, w)
         ps[i]= abs(p)
     end
     m, index = findmax(ps)
-    return diff,m,index
+    return ps, m, index
 end
 
 function match_double_pass(track_keys, sample_keys, secs_to_match, track_ssec)
@@ -319,11 +319,13 @@ function test_sample(nsecs_to_match)
         nsamples = length(sample)
         @printf "Read keys: %d from: %s secs: %f\n"  nrecords track_fn nrecords * sec_per_sample
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
-        
-        match_single_sample(track, sample, 
-            0.1 , (nrecords - nsamples + 1) * sec_per_sample, 
+        tic() 
+        diffs1, diffs2 = match_single_sample(track, sample, 
+            0.1 , 7300.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
             1, 20.0, 
             0, nsecs_to_match)
+        toc()
+        return diffs1, diffs2
     #catch e
     #    println(e)
     #end
