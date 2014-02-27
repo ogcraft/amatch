@@ -35,6 +35,32 @@ function read_keys_from_file(filename::String)
     return a
 end
 
+function hamming_distance(strack, ssample, sz, track, sample)
+	hd = 0
+    for i = 1:sz
+		d =  count_ones(track[i+strack] $ sample[i+ssample]) # xor
+		hd += d
+	end	
+    return hd
+end
+
+#   ti - index in track 
+#   sshift - shift from begin of sample
+#   msize - math window size
+#   dw - distance to the next window
+#   nw - num of windows
+#   sz - sample size
+#   track - track keys vector
+#   sample - sample keys vector
+#   check: tshift + nw*msize + (nw-1)*dw < sz
+function match_sample(ti, tshift, msize, dw, track, sample)
+    max_sample_index =  tshift + nw*msize + (nw-1)*dw 
+    i = sshift
+    while( i < max_sample_index && i < sz )
+        d = hamming_distance(ti+sshift, i, , track, sample)
+    end
+end
+
 function calc_dist(start_pos, record_keys, sample_keys, nsec, shift_sec)
 	w = nsec * keys_in_sec
     shift = int(shift_sec * keys_in_sec)
@@ -179,10 +205,6 @@ function FWHM(X,Y)
     return X[right_idx] - X[left_idx] #return the difference (full width)
 end
 
-#function process_peak(xs, w)
-#    hw= w / 2
-#    m = find(max
-#end
 
 function process_diffs2(in_diffs, w)
     avg = mean(in_diffs)
