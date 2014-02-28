@@ -41,7 +41,7 @@ function hamming_distance(strack, ssample, sz, track, sample)
 		d =  count_ones(track[i+strack] $ sample[i+ssample]) # xor
 		hd += d
 	end	
-    return hd
+    return hd/sz
 end
 
 #   ti - index in track 
@@ -59,6 +59,7 @@ function match_sample(ti, sshift, msize, dw, nw, track, sample)
     i = sshift
     wcount = 0
     d = 32
+    diffs = fill(33, nrecords)
     while( i < max_sample_index && i < sz )
         d = hamming_distance(ti+i, i, msize, track, sample)
         i += msize + dw
@@ -67,8 +68,8 @@ function match_sample(ti, sshift, msize, dw, nw, track, sample)
         else
             break;
         end
+        #println("d:", d, " d/wcount:", d/(wcount*msize), " wcount:", wcount)
     end
-    #println("d:", d, " d/wcount:", d/(wcount*msize), " wcount:", wcount)
     return d/(wcount*msize)
 end
 
@@ -225,8 +226,10 @@ function match_single_pass(track_spos, track_epos, sample_spos, sample_epos, tra
     diffs2 = fill(0.0, ndiffs)
     print("Doing: ")
     for i = 1 : ndiffs
+        if(i>1000) break end
         if( i % 5000 == 0 ) print(" ", i) end
         d = match_sample(i, 10, 10 * keys_in_sec, 0 * keys_in_sec, 2, track, sample)
+        println("i: ", i," d1: ", d);
         diffs1[i] = d
     end
     @printf "\nCollected %d diffs\n"  length(diffs1)
@@ -275,8 +278,10 @@ function match_double_pass1(track_keys, sample_keys, secs_to_match, track_ssec)
     diffs2 = fill(0.0, max_track_pos)
     print("Doing: ")
     for i = 1 : max_track_pos-500
+        if(i>1000) break end
         if( i % 5000 == 0 ) print(" ", i) end
 	    d1, d2 = calc_dist_double(i, track_keys, sample_keys, secs_to_match, 0, 10)
+        println("i: ", i," d1: ", d1," d2: ",d2);
         diffs1[i] = d1
         diffs2[i] = d2
     end
@@ -310,14 +315,8 @@ function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec,
     #diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
 end
 
-#function test1()
-#    match(recordkfn, fullsamplekfn, 3)
-#end
-
-mi1 = 5012
-
 function test_sample(nsecs_to_match)
-   # try
+    try
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
         sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-4500.fpkey"
         track = read_keys_from_file(track_fn)
@@ -333,8 +332,8 @@ function test_sample(nsecs_to_match)
             0, nsecs_to_match)
         toc()
         return diffs1, diffs2
-    #catch e
-    #    println(e)
-    #end
+    catch e
+        println(e)
+    end
 end
 
