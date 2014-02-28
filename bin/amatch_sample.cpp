@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     read_keys_from_file(track_fn, track_keys);
     read_keys_from_file(sample_fn, sample_keys);
     
-    printf( "Read fpkeys: %d from: %s\n", track_keys.size(), track_fn.c_str());
-    printf( "Read fpkeys: %d from: %s\n", sample_keys.size(), sample_fn.c_str());
+    printf( "Read fpkeys: %lu from: %s\n", track_keys.size(), track_fn.c_str());
+    printf( "Read fpkeys: %lu from: %s\n", sample_keys.size(), sample_fn.c_str());
 	
     
     size_t nrecords = track_keys.size();
@@ -46,10 +46,10 @@ int main(int argc, char* argv[])
     double sample_size_secs = 20.0;
     size_t sample_size_keys = (int) sample_size_secs * keys_in_sec;
     
-    printf("Sample size secs: %f keys: %d\n", sample_size_secs, sample_size_keys);
+    printf("Sample size secs: %f keys: %lu\n", sample_size_secs, sample_size_keys);
     
     end_sec_of_track = (nrecords - nsamples +1) * sec_per_sample;
-    printf("Track start sec: %f end sec: %f keys: %d\n", start_sec_of_track, end_sec_of_track, nrecords);
+    printf("Track start sec: %f end sec: %f keys: %lu\n", start_sec_of_track, end_sec_of_track, nrecords);
     
     match_single_sample(track_keys, sample_keys, 
            start_sec_of_track, end_sec_of_track, 

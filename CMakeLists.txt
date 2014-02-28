@@ -33,12 +33,13 @@ if(WIN32)
 #SET(CMAKE_C_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY}")
 #SET(CMAKE_C_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_LIBRARY}")
 
-	include_directories ( ${AMATCH_DIR}/src ${AMATCH_DIR}/include )
+	include_directories ( ${AMATCH_DIR}/lib )
     link_directories    ( ${AMATCH_DIR}/lib/win32 )
 
 else(WIN32)
 
-    link_directories    ( ${AMATCH_DIR}/lib )
+	include_directories ( ${AMATCH_DIR}/src ${AMATCH_DIR}/include )
+	link_directories    ( ${AMATCH_DIR}/lib ${AMATCH_DIR}/Debug)
 
 endif(WIN32)
 
@@ -66,19 +67,7 @@ target_link_libraries ( amatch_sample
 add_executable (generate_fpkeys 
 	bin/generate_fpkeys.cpp 
     )
-target_link_libraries ( generate_fpkeys
-        libamatch.lib
-        )   
 
-#add_executable (amatch 
-#	bin/amatch_main.cpp 
-#    )
-
-#target_link_libraries ( amatch
-#        libamatch.lib
-#        )   
-
-        
 #add_dependencies(amatch_sample amatch)
 
 if(WIN32)
@@ -91,7 +80,7 @@ if(WIN32)
             )   
 else(WIN32)
     target_link_libraries ( generate_fpkeys
-            libamatch.lib
+            libamatch
             fftw3
             sndfile 
             #boost_iostreams 

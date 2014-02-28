@@ -19,7 +19,7 @@ double time_now()
 #else
     struct timeval tv;
     gettimeofday(&tv,0);
-    return 0.0; //ptime(tv.tv_sec,tv.tv_usec * 1000);
+    return tv.tv_sec + (tv.tv_usec / 1000000.0);
 #endif
 }
 

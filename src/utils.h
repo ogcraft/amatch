@@ -31,7 +31,7 @@ inline unsigned int bit_count(unsigned int x)
     return __popcnt(x);
 }
 #else
-unsigned int bit_count(unsigned int x)
+inline unsigned int bit_count(unsigned int x)
 {
     //return std::bitset<32>(x).count();
 	return __builtin_popcount(x);

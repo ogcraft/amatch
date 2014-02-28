@@ -67,10 +67,10 @@ int calc_dist(size_t start_pos, const  key_vector& record_keys, const  key_vecto
 	return (int)round(w/acc);
 }
 
-void calc_dist_double(size_t start_pos, key_const_iterator& track_begin, key_const_iterator& key_end,
-                      key_const_iterator& sample_begin, key_const_iterator& sample_end,
-                      double nsec, double shift_sec1, double shift_sec2,
-                      double& d1, double& d2)
+void calc_dist_double(	size_t start_pos, size_t track_spos, size_t track_epos, const key_vector& track,
+						size_t sample_spos, size_t sample_epos, const key_vector& sample,
+						double nsec, double shift_sec1, double shift_sec2,
+						double& d1, double& d2)
 {
 	unsigned int w = (unsigned int) (nsec * keys_in_sec);
     unsigned int shift1 = (unsigned int)(shift_sec1 * keys_in_sec);
@@ -79,9 +79,9 @@ void calc_dist_double(size_t start_pos, key_const_iterator& track_begin, key_con
     unsigned int acc2 = 32;
     //printf("w: %d nsec: %f\n", w, nsec);
     for(size_t i = 0; i < w; i++) {
-        uint32_t t = *(track_begin + start_pos+i);
-        uint32_t s1 = *(sample_begin + i + shift1);
-        uint32_t s2 = *(sample_begin + i + shift2);
+        uint32_t t = track[track_spos + start_pos+i];
+        uint32_t s1 = sample[sample_spos + i + shift1];
+        uint32_t s2 = sample[sample_spos + i + shift2];
 		acc1 += bit_count( t ^ s1 );
 		acc2 += bit_count( t ^ s2 );
 	}
@@ -106,7 +106,7 @@ size_t read_keys_from_file(const std::string& filename, key_vector& keys)
 	}
 
 	if(keys.size() != len) {
-		printf("Read wrong number of keys: %d != %d\n",keys.size(), len); 
+		printf("Read wrong number of keys: %lu != %d\n",keys.size(), len); 
 	}
 
     return len; 
@@ -119,14 +119,14 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
 
     diff_vector1 diffs(nrecords, std::make_pair(33,0));
     size_t max_i =  (nrecords-(nsec+1) * keys_in_sec);
-    printf("nrecords: %d nsamples:%d max_i: %d\n", nrecords, nsamples, max_i);
+    printf("nrecords: %lu nsamples:%lu max_i: %lu\n", nrecords, nsamples, max_i);
     size_t i = 0;
     for(; i < max_i; i++ ) {
         int d = calc_dist(i, record_keys, sample_keys, sample_key_start, nsec, 0);
         diffs[i] = std::make_pair(d,i);
     }
     
-    printf("Collected %d diffs i: %d\n", diffs.size(), i);
+    printf("Collected %lu diffs i: %lu\n", diffs.size(), i);
     
     std::pair<int,int> dp = std::make_pair(0,0);//min_diffs(diffs);
     
@@ -142,26 +142,26 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
     return 0;
 }
 
-void match_double_pass(key_const_iterator& track_begin, key_const_iterator& track_end,
-                       key_const_iterator& sample_begin, key_const_iterator& sample_end ,
-                       double secs_to_match, double track_ssec, 
-                       diff_vector& diffs1, diff_vector& diffs2)
+void match_double_pass(	size_t track_spos,  size_t track_epos,  const key_vector& track,
+						size_t sample_spos,	size_t sample_epos,	const key_vector& sample, 
+                        double secs_to_match, double track_ssec, 
+                        diff_vector& diffs1, diff_vector& diffs2)
 {
-    unsigned ntrack_keys = std::distance(track_begin, track_end);
-    unsigned nsamples = std::distance(sample_begin, sample_end);
+    unsigned ntrack_keys = track_epos - track_spos;
+    unsigned nsamples = sample_epos - sample_spos;
     unsigned keys_to_match = (unsigned) secs_to_match * keys_in_sec;
     size_t max_track_pos = ntrack_keys - keys_to_match + 1;
-    printf("max_record_pos: %d\n", max_track_pos);
+    printf("max_record_pos: %lu\n", max_track_pos);
     diffs1.reserve(max_track_pos);
     diffs2.reserve(max_track_pos);
     std::fill( all(diffs1), std::make_pair(0.0,0));
     std::fill( all(diffs2), std::make_pair(0.0,0));
     printf("Doing: ");
     for(size_t i = 0; i < max_track_pos - 500; i++) {
-        if( i % 5000 == 0 ) printf(" %d", i);
+        if( i % 5000 == 0 ) printf(" %lu", i);
         double d1 = 0;
         double d2 = 0;
-        calc_dist_double(i, track_begin, track_end, sample_begin, sample_end, 
+        calc_dist_double(i, track_spos, track_epos, track, sample_spos, sample_epos, sample, 
                       secs_to_match, 0, 10, d1, d2);
         //printf(" d1:%f,d2:%f", d1, d2);
         diffs1.push_back(std::make_pair(d1,i));
@@ -197,15 +197,15 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
     printf("\n--------------------------------\n"); 
     unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
     unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
-    printf("Looking for sec: %fsec (%d) from total: %fsec (%d)\n", sample_spos * sec_per_sample, sample_spos, sample_esec, sample_esec * keys_in_sec);
+    printf("Looking for sec: %fsec (%d) from total: %fsec (%d)\n", sample_spos * sec_per_sample, sample_spos, sample_esec, (int)(sample_esec * keys_in_sec));
     unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
     printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
-    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_spos, sample_epos);
+    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
-    match_double_pass(track.begin() + track_spos, track.begin() + track_epos, 
-                      sample.begin() + sample_spos, sample.begin() + sample_epos, 
+    match_double_pass(track_spos,	track_epos,		track, 
+                      sample_spos,	sample_epos,	sample, 
                       secs_to_match, track_ssec, diff1, diff2);
 
     return ret;
