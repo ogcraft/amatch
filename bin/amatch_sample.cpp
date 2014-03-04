@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     
     match_single_sample(track_keys, sample_keys, 
            start_sec_of_track, end_sec_of_track, 
-            1.0, sample_size_secs, 
+            0.01, sample_size_secs, 
             0, nsecs_to_match);
  
     double end_t = time_now();
