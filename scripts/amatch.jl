@@ -278,10 +278,8 @@ function match_double_pass1(track_keys, sample_keys, secs_to_match, track_ssec)
     diffs2 = fill(0.0, max_track_pos)
     print("Doing: ")
     for i = 1 : max_track_pos-500
-        if(i>1000) break end
         if( i % 5000 == 0 ) print(" ", i) end
 	    d1, d2 = calc_dist_double(i, track_keys, sample_keys, secs_to_match, 0, 10)
-        println("i: ", i," d1: ", d1," d2: ",d2);
         diffs1[i] = d1
         diffs2[i] = d2
     end
@@ -310,15 +308,16 @@ function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec,
     track_epos = int(track_esec - 10) * keys_in_sec
     println("track_spos: ", track_spos, ", track_epos: ", track_epos)
     println("sample_spos: ", sample_spos, ", sample_epos: ", sample_epos)
-    diff1, diff2 =  match_single_pass(track_spos, track_epos, sample_spos, sample_epos, track, sample )
-    #diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    #diff1, diff2 =  match_single_pass(track_spos, track_epos, sample_spos, sample_epos, track, sample )
+    diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
     #diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
 end
 
 function test_sample(nsecs_to_match)
     try
+        #Mrsmith-5513.fpkey Mrsmith-5513-95s-fingerpoints.bin 
         track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-rec-4500.fpkey"
+        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513-6000s-fingerpoints.bin"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -327,8 +326,8 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         tic() 
         diffs1, diffs2 = match_single_sample(track, sample, 
-            4000.0 , 5000.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
-            1, 20.0, 
+            5950.0 , 6100.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
+            0.01, 20.0, 
             0, nsecs_to_match)
         toc()
         return diffs1, diffs2

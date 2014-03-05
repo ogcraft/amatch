@@ -112,7 +112,7 @@ int generate_fpkeys(const std::string& wavfn)
 
 	
 	string bitfilename(wavfn);
-	bitfilename.replace(wavfn.find(".wav"), 4,"-fingerpoints.bin");
+	bitfilename.replace(wavfn.find(".wav"), 4,".fpkeys");
 	printf("Writing %d keys to '%s'\n", nbits, bitfilename.c_str());
 	writebits(bits, nbits, bitfilename.c_str());
 #if 0
