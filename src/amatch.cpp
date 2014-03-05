@@ -16,6 +16,7 @@
 #define all(C) C.begin(),C.end()
 #define PRINTDIFFVEC( v ) {diff_vector::iterator it;for(it=v.begin();it!=v.end();++it){std::cout << it->first <<","<<it->second<<" ";};std::cout<<std::endl;}
 
+unsigned g_count = 0;
 
 bool less_by_diff_value(diff_type x, diff_type y)
 {
@@ -71,6 +72,7 @@ double hamming_distance(size_t strack, size_t ssample, int sz, const key_vector&
 {
     unsigned hd = 0;
     for(int i = 0; i < sz; i++) {
+        g_count++;
 		//hd += bit_count(track[i+strack] ^ sample[i+ssample]); // xor
 		hd += __popcnt(track[i+strack] ^ sample[i+ssample]); // xor
 	}
@@ -255,7 +257,7 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
 //                      sample_spos,	sample_epos,	sample, 
 //                      secs_to_match, track_ssec, diff1, diff2);
     int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
-    printf("=== Found sec: %f index:%d\n", index*sec_per_sample, index);
+    printf("=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
     return ret;
 }
 
