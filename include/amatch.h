@@ -5,6 +5,8 @@
 #include <string> 
 #include <vector> 
 
+#include "utils.h"
+
 typedef std::vector<uint32_t> key_vector;
 typedef key_vector::iterator key_iterator;
 typedef key_vector::const_iterator key_const_iterator;

@@ -33,7 +33,7 @@ if(WIN32)
 #SET(CMAKE_C_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY}")
 #SET(CMAKE_C_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_LIBRARY}")
 
-	include_directories ( ${AMATCH_DIR}/lib )
+	include_directories ( ${AMATCH_DIR}/lib/win32/include ${AMATCH_DIR}/include ${AMATCH_DIR}/src )
     link_directories    ( ${AMATCH_DIR}/lib/win32 )
 
 else(WIN32)
