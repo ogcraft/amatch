@@ -73,8 +73,8 @@ double hamming_distance(size_t strack, size_t ssample, int sz, const key_vector&
     unsigned hd = 0;
     for(int i = 0; i < sz; i++) {
         g_count++;
-		//hd += bit_count(track[i+strack] ^ sample[i+ssample]); // xor
-		hd += __popcnt(track[i+strack] ^ sample[i+ssample]); // xor
+		hd += bit_count(track[i+strack] ^ sample[i+ssample]); // xor
+		//hd += __popcnt(track[i+strack] ^ sample[i+ssample]); // xor
 	}
     return hd/sz;
 }
@@ -214,6 +214,24 @@ double match_sample_simple(size_t ti, size_t si, int msize, const key_vector& tr
     return i/d;
 }
 
+//int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& track, const key_vector& sample) 
+//{
+//    unsigned msize = (unsigned)(match_sec * keys_in_sec);
+//    int len = ie - is;
+//    printf("len: %d msize: %d\n", len, msize);
+//    double m = 0.0;
+//    for (int i = 0; i < len; i++) {
+//        double d = match_sample_simple(i+is, 1, msize, track, sample);
+//        m += d;
+//        double dd =  d/(m/i); 
+//        if(dd > 1.7) {
+//            printf("Found: index: %d dd:%f\n", i, dd);
+//            return i;
+//        }
+//    }
+//    return 0;
+//}
+
 int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& track, const key_vector& sample) 
 {
     unsigned msize = (unsigned)(match_sec * keys_in_sec);
@@ -221,7 +239,8 @@ int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& tr
     printf("len: %d msize: %d\n", len, msize);
     double m = 0.0;
     for (int i = 0; i < len; i++) {
-        double d = match_sample_simple(i+is, 1, msize, track, sample);
+        //double d = match_sample_simple(i+is, 1, msize, track, sample);
+        double d = msize / hamming_distance(i+is, 0, msize, track, sample);
         m += d;
         double dd =  d/(m/i); 
         if(dd > 1.7) {
@@ -238,15 +257,14 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
                         double sample_sshift_secs, double secs_to_match)
 {
     bool ret = true;
-    printf("keys_in_sec: %d\n", keys_in_sec);
+    //printf("keys_in_sec: %d\n", keys_in_sec);
     printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
         track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
     printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
         sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
-    printf("\n--------------------------------\n"); 
+    printf("--------------------------------\n"); 
     unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
     unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
-    printf("Looking for sec: %fsec (%d) from total: %fsec (%d)\n", sample_spos * sec_per_sample, sample_spos, sample_esec, (int)(sample_esec * keys_in_sec));
     unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
     printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);

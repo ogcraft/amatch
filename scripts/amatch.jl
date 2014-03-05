@@ -222,7 +222,7 @@ function process_diffs1(in_diffs)
 end
 
 function linear_inter(x0, y0, x1, y1, x)
-    return y0 = (y1-y0)*(x-x0)/(x1-x0)
+    return y0 + (y1-y0)*(x-x0)/(x1-x0)
 end
 function FWHM(X,Y)
     half_max = max(Y) / 2.0

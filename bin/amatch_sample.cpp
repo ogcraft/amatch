@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
         printf("Usage: amatch_sample <track filename> <sample filename> [num of secs to match]\n\n");
         return 1;
     }
-    double nsecs_to_match = 5.0;
+    double nsecs_to_match = 10.0;
     double start_sec_of_track = 0.1;
     double end_sec_of_track = 0.1;
     
@@ -35,25 +35,24 @@ int main(int argc, char* argv[])
    
     read_keys_from_file(track_fn, track_keys);
     read_keys_from_file(sample_fn, sample_keys);
-    
+	printf("amatch_sample: version 1.1\n\n"); 
     printf( "Read fpkeys: %lu from: %s\n", track_keys.size(), track_fn.c_str());
     printf( "Read fpkeys: %lu from: %s\n", sample_keys.size(), sample_fn.c_str());
 	
     
     size_t nrecords = track_keys.size();
-    size_t nsamples = sample_keys.size();
     
-    double sample_size_secs = 20.0;
-    size_t sample_size_keys = (int) sample_size_secs * keys_in_sec;
+    size_t sample_size_keys = sample_keys.size();
+    double sample_size_secs = sample_size_keys * sec_per_sample;
     
     printf("Sample size secs: %f keys: %lu\n", sample_size_secs, sample_size_keys);
     
-    end_sec_of_track = (nrecords - nsamples +1) * sec_per_sample;
+    end_sec_of_track = (nrecords - sample_size_keys +1) * sec_per_sample;
     printf("Track start sec: %f end sec: %f keys: %lu\n", start_sec_of_track, end_sec_of_track, nrecords);
     
     match_single_sample(track_keys, sample_keys, 
            start_sec_of_track, end_sec_of_track, 
-            0.01, sample_size_secs, 
+            0, sample_size_secs, 
             0, nsecs_to_match);
  
     double end_t = time_now();
