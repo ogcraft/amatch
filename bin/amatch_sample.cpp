@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     double end_sec_of_track = 0.1;
     
     if(argc >= 4) {
-        nsecs_to_match = atof(argv[4]);
+        nsecs_to_match = atof(argv[3]);
     }
     
     double start_t = time_now();

@@ -67,6 +67,16 @@ int calc_dist(size_t start_pos, const  key_vector& record_keys, const  key_vecto
 	return (int)round(w/acc);
 }
 
+double hamming_distance(size_t strack, size_t ssample, int sz, const key_vector& track, const key_vector& sample)
+{
+    unsigned hd = 0;
+    for(int i = 0; i < sz; i++) {
+		//hd += bit_count(track[i+strack] ^ sample[i+ssample]); // xor
+		hd += __popcnt(track[i+strack] ^ sample[i+ssample]); // xor
+	}
+    return hd/sz;
+}
+
 void calc_dist_double(	size_t start_pos, size_t track_spos, size_t track_epos, const key_vector& track,
 						size_t sample_spos, size_t sample_epos, const key_vector& sample,
 						double nsec, double shift_sec1, double shift_sec2,
@@ -183,6 +193,43 @@ void match_double_pass(	size_t track_spos,  size_t track_epos,  const key_vector
     printf("Diff in secs: %f(%d) relative: %f\n", ds, di, (10.0-ds)/10.0);
 }
 
+//   ti - index in track 
+//   si - start index in sample
+//   msize - match window size
+//   sz - sample size
+//   track - track keys vector
+//   sample - sample keys vector
+double match_sample_simple(size_t ti, size_t si, int msize, const key_vector& track, const key_vector& sample)
+{
+    int sz = sample.size();
+    int max_sample_index =  si + msize; 
+    int i = 0;
+    double d = 32.0;
+    while( i < max_sample_index && i < sz ) {
+        d += hamming_distance(ti+i, i, msize, track, sample);
+        i += 1;
+    } 
+    return i/d;
+}
+
+int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& track, const key_vector& sample) 
+{
+    unsigned msize = (unsigned)(match_sec * keys_in_sec);
+    int len = ie - is;
+    printf("len: %d msize: %d\n", len, msize);
+    double m = 0.0;
+    for (int i = 0; i < len; i++) {
+        double d = match_sample_simple(i+is, 1, msize, track, sample);
+        m += d;
+        double dd =  d/(m/i); 
+        if(dd > 1.7) {
+            printf("Found: index: %d dd:%f\n", i, dd);
+            return i;
+        }
+    }
+    return 0;
+}
+
 bool match_single_sample(const key_vector& track, const key_vector& sample, 
                         double track_ssec, double track_esec, 
                         double sample_ssec, double sample_esec, 
@@ -204,10 +251,11 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
     printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
-    match_double_pass(track_spos,	track_epos,		track, 
-                      sample_spos,	sample_epos,	sample, 
-                      secs_to_match, track_ssec, diff1, diff2);
-
+//    match_double_pass(track_spos,	track_epos,		track, 
+//                      sample_spos,	sample_epos,	sample, 
+//                      secs_to_match, track_ssec, diff1, diff2);
+    int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
+    printf("=== Found sec: %f index:%d\n", index*sec_per_sample, index);
     return ret;
 }
 

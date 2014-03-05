@@ -73,6 +73,48 @@ function match_sample(ti, sshift, msize, dw, nw, track, sample)
     return d/(wcount*msize)
 end
 
+#   ti - index in track 
+#   si - start index in sample
+#   msize - match window size
+#   sz - sample size
+#   track - track keys vector
+#   sample - sample keys vector
+function match_sample_simple(ti, si, msize, track, sample)
+    sz = length(sample)
+    max_sample_index =  si + msize 
+    i = 1
+    d = 32
+    #println("max_sample_index:", max_sample_index, " sz:", sz)
+    while( i < max_sample_index && i < sz )
+        d += hamming_distance(ti+i, i, msize, track, sample)
+        i += 1
+        #println("d:", d, " d/i:", d/i)
+    end
+    #println("d:", d, " d/i:", d/i, " i:", i)
+    return i/d
+end
+
+function f1(is, ie, match_sec, track, sample)
+    msize = match_sec * keys_in_sec
+    len = ie - is
+    ds=fill(0.0, len)
+    ms=fill(0.0, len)
+    m = 0
+    for i=1:len
+        ds[i] = match_sample_simple(i+is, 1, msize, track, sample)
+        m += ds[i]
+        dd =  ds[i]/(m/i) 
+        if(i>100)
+            ms[i] = dd
+        end
+        if(dd > 1.5)
+            #println("Found: ", i, " dd = ",dd)
+            return ds, i, dd
+        end
+    end
+    return ds, ms
+end
+
 function calc_dist(start_pos, record_keys, sample_keys, nsec, shift_sec)
 	w = nsec * keys_in_sec
     shift = int(shift_sec * keys_in_sec)
@@ -226,9 +268,9 @@ function match_single_pass(track_spos, track_epos, sample_spos, sample_epos, tra
     diffs2 = fill(0.0, ndiffs)
     print("Doing: ")
     for i = 1 : ndiffs
-        if(i>1000) break end
-        if( i % 5000 == 0 ) print(" ", i) end
-        d = match_sample(i, 10, 10 * keys_in_sec, 0 * keys_in_sec, 2, track, sample)
+        if( i % 1000 == 0 ) print(" ", i) end
+        #function match_sample_simple(ti, si, msize, track, sample)
+        d = match_sample_simple(i, 1, 10 * keys_in_sec, 0 * keys_in_sec, 2, track, sample)
         println("i: ", i," d1: ", d);
         diffs1[i] = d
     end
@@ -309,15 +351,17 @@ function match_single_sample(track, sample, track_ssec, track_esec, sample_ssec,
     println("track_spos: ", track_spos, ", track_epos: ", track_epos)
     println("sample_spos: ", sample_spos, ", sample_epos: ", sample_epos)
     #diff1, diff2 =  match_single_pass(track_spos, track_epos, sample_spos, sample_epos, track, sample )
-    diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    #diff1, diff2 =  match_double_pass(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
     #diff1, diff2 =  match_double_pass1(track[track_spos:track_epos], sample[sample_spos:sample_epos], secs_to_match, track_ssec )
+    ds, i, m = f1(track_spos, track_epos, secs_to_match, track, sample)
+    println("=== Found sec: ", i*sec_per_sample)
+    return ds
 end
 
-function test_sample(nsecs_to_match)
+function test_sample(nsecs_to_match, track_fn, sample_fn)
     try
-        #Mrsmith-5513.fpkey Mrsmith-5513-95s-fingerpoints.bin 
-        track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
-        sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513-6000s-fingerpoints.bin"
+        #track_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513.fpkey"
+        #sample_fn = "/Users/olegg/asearchdata/1/Mrsmith-5513-6000s-fingerpoints.bin"
         track = read_keys_from_file(track_fn)
         sample = read_keys_from_file(sample_fn)
         nrecords = length(track)
@@ -325,12 +369,12 @@ function test_sample(nsecs_to_match)
         @printf "Read keys: %d from: %s secs: %f\n"  nrecords track_fn nrecords * sec_per_sample
         @printf "Read keys: %d from: %s secs: %f\n" nsamples sample_fn nsamples * sec_per_sample
         tic() 
-        diffs1, diffs2 = match_single_sample(track, sample, 
-            5950.0 , 6100.0, #(nrecords - nsamples - 1000) * sec_per_sample, 
+        diffs1 = match_single_sample(track, sample, 
+            0.01 , (nrecords - nsamples - 1000) * sec_per_sample, 
             0.01, 20.0, 
             0, nsecs_to_match)
         toc()
-        return diffs1, diffs2
+        return diffs1
     catch e
         println(e)
     end
