@@ -271,12 +271,34 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
     printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
-//    match_double_pass(track_spos,	track_epos,		track, 
-//                      sample_spos,	sample_epos,	sample, 
-//                      secs_to_match, track_ssec, diff1, diff2);
     int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
     printf("=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
     return ret;
 }
 
+bool match_single_sample_double_pass(const key_vector& track, const key_vector& sample, 
+                        double track_ssec, double track_esec, 
+                        double sample_ssec, double sample_esec, 
+                        double sample_sshift_secs, double secs_to_match)
+{
+    bool ret = true;
+    //printf("keys_in_sec: %d\n", keys_in_sec);
+    printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
+        track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
+    printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
+        sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
+    printf("--------------------------------\n"); 
+    unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
+    unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
+    unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
+    unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
+    printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
+    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
+    diff_vector diff1;
+    diff_vector diff2;
+    match_double_pass(track_spos,	track_epos,		track, 
+                      sample_spos,	sample_epos,	sample, 
+                      secs_to_match, track_ssec, diff1, diff2);
+    return ret;
+}
 

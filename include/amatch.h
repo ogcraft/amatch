@@ -31,5 +31,10 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
                         double sample_ssec, double sample_esec, 
                         double sample_sshift_secs, double secs_to_match);
 
+bool match_single_sample_double_pass(const key_vector& track, const key_vector& sample, 
+                        double track_ssec, double track_esec, 
+                        double sample_ssec, double sample_esec, 
+                        double sample_sshift_secs, double secs_to_match);
+
 #endif	/* AMATCH_H */
 

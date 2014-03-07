@@ -60,15 +60,22 @@ add_executable (amatch_sample
 	bin/amatch_sample.cpp 
     )
 
+add_executable (amatch_sample_double 
+	bin/amatch_sample_double.cpp 
+    )
+
 target_link_libraries ( amatch_sample
-        libamatch
-        )   
+	libamatch
+	)   
+
+target_link_libraries ( amatch_sample_double
+	libamatch
+	)   
 
 add_executable (generate_fpkeys 
 	bin/generate_fpkeys.cpp 
-    )
+	)
 
-#add_dependencies(amatch_sample amatch)
 
 if(WIN32)
     target_link_libraries ( generate_fpkeys
