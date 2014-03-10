@@ -17,7 +17,7 @@ typedef std::pair<double, int> diff_type;
 typedef std::vector< diff_type > diff_vector;
 
 #define keys_in_sec (86)
-#define sec_per_sample ((double) 0.01164) 
+#define sec_per_sample ((double) 0.011609977324263039) // (window/overlaping)/samplerate =  (2048/32)/5512.5
 
 unsigned int bit_count(unsigned int x);
 int calc_dist(size_t start_pos, const  key_vector& record_keys, const  key_vector& sample_keys,  size_t sample_key_start, int nsec, int shift_sec);

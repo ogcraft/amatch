@@ -22,41 +22,7 @@ using namespace std;
 #include "sigproc.h"
 #include <math.h>
 
-//#if 0
-// frames overlap 31/32
-#define OVERLAP 32
-// Tried 15/16 but doesn't work as well
-// Not enough frames in 5 seconds of song
-//#define OVERLAP 16
 
-// number of samples in a frame
-#define FRAMESIZE 2048
-
-#define OVERLAPSAMPLES (FRAMESIZE/OVERLAP)
-
-// expected original frequency of input wave file
-#define OFREQ1 44100
-#define OFREQ1MULT 8
-#define OFREQ2 11025
-#define OFREQ2MULT 2
-
-// downsampled frequency
-#define DFREQ 5513
-
-// amount of time in a frame
-#define FRAME_TLEN ((float) FRAMESIZE / (float) DFREQ)
-
-// minimum and maximum frequency to consider
-#define MINFREQ 300
-#define MAXFREQ 2000
-
-#define MINCOEF (FRAME_TLEN * MINFREQ)
-//#define MAXCOEF (FRAME_TLEN * MAXFREQ)
-
-// normalize power (volume) of a wave file.
-// minimum and maximum rms to normalize from.
-#define MINRMS 0.1
-#define MAXRMS 3
 
 // wave file header
 // This header should be 44 bytes
