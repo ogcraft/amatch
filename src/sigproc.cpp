@@ -557,7 +557,7 @@ unsigned int * wav2bits(vector<Filter> & filters, float * samples,
 		memcpy(dsamples, samples, sizeof(float) * nsamples);
 	}
 
-	printf("  Got %d samples.\n", nsamples);
+	printf("Got %d samples\n", nsamples);
 	// dsamples now at 5512.5 Hz sample rate
 	
 	printf("Normalizing power...\n");
@@ -565,13 +565,16 @@ unsigned int * wav2bits(vector<Filter> & filters, float * samples,
 
 	printf("Calculating windows DFT's...\n");
 
-	//for (unsigned int i = 1000; i < 030; i++)
-	//	printf("D Sample %d: %f\n", i, dsamples[i]);
-	
+//	for (unsigned int i = 100; i < 130; i++) {
+//		printf("D Sample %d: %f\n", i, dsamples[i]);
+//	}
 
 	unsigned int nframes;
 	float ** frames = wdft(dsamples, nsamples, &nframes);
 	free(dsamples);
+
+//	for (unsigned int i = 100; i < 130; i++)
+//		printf("D Furie %d: %f\n", i, frames[i]);
 
 	printf("Computing integral image on %d frames...\n", nframes);
 	integralimage(frames, nframes);
@@ -588,4 +591,3 @@ unsigned int * wav2bits(vector<Filter> & filters, float * samples,
 
 	return bits;
 }
-

@@ -85,6 +85,12 @@ pair<const char*, size_t> fpData = fextr.getFingerprint();
 
 #endif
 
+
+vector<Filter> prepare_filters()
+{
+	return prepare_filters(filters1, ARRAY_LEN(filters1));
+}
+
 int generate_fpkeys(const std::string& wavfn) 
 {
 

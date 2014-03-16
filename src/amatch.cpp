@@ -12,9 +12,12 @@
 
 #include "utils.h"
 #include "amatch.h"
+#include "sigproc.h"
 
 #define all(C) C.begin(),C.end()
 #define PRINTDIFFVEC( v ) {diff_vector::iterator it;for(it=v.begin();it!=v.end();++it){std::cout << it->first <<","<<it->second<<" ";};std::cout<<std::endl;}
+
+std::vector<Filter> prepare_filters();
 
 unsigned g_count = 0;
 
@@ -103,7 +106,7 @@ void calc_dist_double(	size_t start_pos, size_t track_spos, size_t track_epos, c
 
 size_t read_keys_from_file(const std::string& filename, key_vector& keys)
 {
-    std::ifstream ifile( filename, std::ios::binary);
+    std::ifstream ifile( filename.c_str(), std::ios::binary);
 	
     uint32_t magic = 0; 
 	ifile.read((char*)&magic, sizeof(magic));
@@ -122,6 +125,15 @@ size_t read_keys_from_file(const std::string& filename, key_vector& keys)
 	}
 
     return len; 
+}
+
+int fpkeys_from_samples(float* samples, unsigned int nsamples, unsigned int freq, key_vector& keys) 
+{
+	unsigned int nbits;
+	std::vector<Filter> filters = prepare_filters();
+	unsigned int* bits = wav2bits(filters, samples, nsamples, freq, &nbits);
+	keys.insert(keys.end(), bits, bits+nbits);
+	return nbits;
 }
 
 size_t match_single_pass(const key_vector& record_keys, const key_vector& sample_keys, size_t sample_key_start, int nsec, double sec)
@@ -149,7 +161,7 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
     double diff_in_secs = (sec - index * sec_per_sample);
     printf("Diff secs_diff: %f \n",  diff_in_secs);
     
-    std::string isfound = abs(diff_in_secs) > 1 ? "TEST FAILED !!!":"TEST PASSED";
+    std::string isfound = abs((int)diff_in_secs) > 1 ? "TEST FAILED !!!":"TEST PASSED";
     printf("%s\n", isfound.c_str());
     return 0;
 }
@@ -251,12 +263,11 @@ int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& tr
     return 0;
 }
 
-bool match_single_sample(const key_vector& track, const key_vector& sample, 
+int match_single_sample(const key_vector& track, const key_vector& sample, 
                         double track_ssec, double track_esec, 
                         double sample_ssec, double sample_esec, 
                         double sample_sshift_secs, double secs_to_match)
 {
-    bool ret = true;
     //printf("keys_in_sec: %d\n", keys_in_sec);
     printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
         track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
@@ -272,8 +283,8 @@ bool match_single_sample(const key_vector& track, const key_vector& sample,
     diff_vector diff1;
     diff_vector diff2;
     int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
-    printf("=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
-    return ret;
+    //printf("=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
+    return index;
 }
 
 bool match_single_sample_double_pass(const key_vector& track, const key_vector& sample, 

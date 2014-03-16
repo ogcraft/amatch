@@ -10,6 +10,7 @@
 
 #include <sndfile.h>
 //#include <armadillo>
+#include "amatch.h"
 
 #define ARRAY_LEN(x)  ((int) (sizeof (x) / sizeof (x [0])))
 #define MAX(x,y)    ((x) > (y) ? (x) : (y))
@@ -41,6 +42,7 @@ inline unsigned int bit_count(unsigned int x)
 /* Open stereo file and place channels in rows of a matrix */
 //void spectrogram(const arma::mat& S, int window_sz, int hop_sz, arma::mat& result);
 void writebits(unsigned int bits[], unsigned int nbits, const char * fn);
+void writekeys(const key_vector keys, const char* fn);
 
 double time_now();
 

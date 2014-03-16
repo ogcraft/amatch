@@ -63,6 +63,27 @@ void writebits(unsigned int bits[], unsigned int nbits, const char* fn)
 	fclose(f);
 }
 
+void writekeys(const key_vector keys, const char* fn)
+{
+	FILE * f = fopen(fn, "wb");
+	if (!f) {
+		printf("Error: Can't open %s for writing.\n", fn);
+		exit(1);
+	}
+
+	unsigned int t = 32000; // special case to represent packed bits
+	unsigned nbits = keys.size();
+	fwrite(&t, 4, 1, f);
+	fwrite(&nbits, 4, 1, f);
+
+	for (unsigned int i = 0; i < nbits; i++) {
+		fwrite(&(keys[i]), 4, 1, f);
+	}
+
+	fflush(f);
+	fclose(f);
+}
+
 #if 0
 // Create a hamming window of windowLength samples in buffer
 vec hamming(int window_sz) {

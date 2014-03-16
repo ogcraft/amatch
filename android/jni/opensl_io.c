@@ -232,7 +232,6 @@ static SLresult openSLRecOpen(OPENSL_STREAM *p){
 				   SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
 				   speakers, SL_BYTEORDER_LITTLEENDIAN};
     SLDataSink audioSnk = {&loc_bq, &format_pcm};
-
     // create audio recorder
     // (requires the RECORD_AUDIO permission)
     const SLInterfaceID id[1] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE};
