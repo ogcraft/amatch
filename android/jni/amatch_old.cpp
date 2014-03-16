@@ -68,7 +68,8 @@ int main(int argc, char** argv)
 
 		//for(int i = 0; i < SR; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
 		key_vector sample_keys;
-		fpkeys_from_samples(inbuffer, samps_collected, SR, sample_keys); 
+		//fpkeys_from_samples(inbuffer, samps_collected, SR, sample_keys); 
+		fpkeys_from_samples(samplebuffer, samps_collected, SR, sample_keys); 
 
 		printf("Generated samps keys: %d\n", sample_keys.size());
 		//for(int i = 0; i < sample_keys.size(); i++) { printf("K: 0x%08x\n", sample_keys[i]); }

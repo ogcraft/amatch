@@ -6,7 +6,7 @@ All rights reserved.
 
 package com.ogcraft.amatchtest;
 
-import amatch_generated.amatch_interface;
+//import amatch_generated.amatch_interface;
 import android.app.Activity;
 import android.os.Bundle;
 
@@ -20,7 +20,7 @@ public class AmatchTestActivity extends Activity {
         thread = new Thread() {
 			public void run() {
 				setPriority(Thread.MAX_PRIORITY);
-				amatch_interface.start_process();
+				//amatch_interface.start_process();
 			}
 		};
 		thread.start();   
@@ -28,7 +28,7 @@ public class AmatchTestActivity extends Activity {
     public void onDestroy(){
     	
     	super.onDestroy();
-    	amatch_interface.stop_process();
+    	//amatch_interface.stop_process();
     	try {
 			thread.join();
 		} catch (InterruptedException e) {
