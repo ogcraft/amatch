@@ -41,6 +41,12 @@ public class AmatchTestActivity extends Activity {
 				Log.d(TAG,"FoundIndex: n = " + i);
 				double found_sec = i * SEC_PER_KEY;
 				Log.d(TAG,"Found: sec = " + found_sec);
+				TextView v = (TextView)findViewById(R.id.found_display);
+				if(i > 10) {
+					v.setText("Found sec: " + found_sec);
+				} else {
+					v.setText("Not found");
+				}
 			}
 		}; 
     @Override
@@ -51,7 +57,8 @@ public class AmatchTestActivity extends Activity {
         TextView v = (TextView)findViewById(R.id.fpkeys_fn);
 		v.setText("Amatch ver: " + amatch_interface.amatch_version());
 		((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
-		
+		TextView v1 = (TextView)findViewById(R.id.found_display);
+		v1.setText("");
 
         //thread = new Thread() {
 		//	public void run() {
@@ -101,13 +108,16 @@ public class AmatchTestActivity extends Activity {
     {
     	TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
     	v.setEnabled(false);
+    	TextView v1 = (TextView)findViewById(R.id.found_display);
+		v1.setText("Searching...");
 		Runnable runnable = new Runnable() {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
 	        	int found_index = match_sample();
+	        	Log.d(TAG,"fff: " + found_index);
 	        	Message msg = recorder_thread_handler.obtainMessage();
     			Bundle bundle = new Bundle();
-    			bundle.putLong("FoundIndex", found_index);
+    			bundle.putInt("FoundIndex", found_index);
                 msg.setData(bundle);
                 recorder_thread_handler.sendMessage(msg);
 	        }
