@@ -11,7 +11,7 @@
 #include "opensl_io.h"
 #if 1
 
-void writekeys(const key_vector keys, const char* fn);
+//void writekeys(const key_vector keys, const char* fn);
 
 int main(int argc, char** argv)
 {
@@ -21,10 +21,10 @@ int main(int argc, char** argv)
 	printf("Sndfile version: %s\n",sndflile_ver);
 	printf("amatch android: version 1.1\n\n"); 
 	///////////////////////////////////////////////
-	if(!init_amatch_context()) {
-		printf("Failed to create amatch_context. Exiting.\n");
-		return 1;
-	}
+//	if(!init_amatch_context()) {
+//		printf("Failed to create amatch_context. Exiting.\n");
+//		return 1;
+//	}
 	
 	const char* track_keys_fn = "/storage/sdcard0/asearch/monstr-eng1-11025.fpkeys";
 	read_track_fpkeys(track_keys_fn);
@@ -43,13 +43,10 @@ int main(int argc, char** argv)
     //struct timeval start_rec_tv;
     //gettimeofday(&start_rec_tv,0);
     //return tv.tv_sec + (tv.tv_usec / 1000000.0);
-	
-	float  inbuffer[VECSAMPS_MONO]={0.0};
-	for(int n = 0; n < 25; n++) {
-		samps = read_audio_in(inbuffer, VECSAMPS_MONO);
-	}  
 
-    int tryes = 100;	
+	skip_samples(25);
+
+	int tryes = 100;
 	while(tryes--) {	
 		printf("\n------------------------------\nSTART RECORDING...\n");	
 		double start_rec = time_now();  
@@ -73,7 +70,7 @@ int main(int argc, char** argv)
 	}
 	
 	close_audo_device();
-	destroy_amatch_context();
+//	destroy_amatch_context();
 	return 0;
 }
 

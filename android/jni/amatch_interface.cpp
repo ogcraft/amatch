@@ -266,6 +266,30 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NSAMPLES_1ge
 }
 
 
+SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1PER_1KEY_1get(JNIEnv *jenv, jclass jcls) {
+  jdouble jresult = 0 ;
+  double result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (double)(0.011609977324263039);
+  jresult = (jdouble)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_amatch_1version(JNIEnv *jenv, jclass jcls) {
+  jstring jresult = 0 ;
+  char *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (char *)amatch_version();
+  if (result) jresult = jenv->NewStringUTF((const char *)result);
+  return jresult;
+}
+
+
 SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1amatch_1context(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
   amatch_context *result = 0 ;
@@ -275,25 +299,6 @@ SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1amatch
   result = (amatch_context *)get_amatch_context();
   *(amatch_context **)&jresult = result; 
   return jresult;
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_amatch_1generated_amatch_1interfaceJNI_init_1amatch_1context(JNIEnv *jenv, jclass jcls) {
-  jboolean jresult = 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (bool)init_amatch_context();
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_destroy_1amatch_1context(JNIEnv *jenv, jclass jcls) {
-  (void)jenv;
-  (void)jcls;
-  destroy_amatch_context();
 }
 
 
@@ -332,6 +337,16 @@ SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_close_1audo_
   (void)jenv;
   (void)jcls;
   close_audo_device();
+}
+
+
+SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_skip_1samples(JNIEnv *jenv, jclass jcls, jint jarg1) {
+  int arg1 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  skip_samples(arg1);
 }
 
 

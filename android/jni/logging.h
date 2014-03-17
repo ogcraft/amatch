@@ -1,7 +1,7 @@
 
 #include <android/log.h>
 
-#if 0
+#if 1
 
 #define LOGV(TAG,...) __android_log_print(ANDROID_LOG_VERBOSE, TAG,__VA_ARGS__)
 #define LOGD(TAG,...) __android_log_print(ANDROID_LOG_DEBUG  , TAG,__VA_ARGS__)
@@ -19,3 +19,5 @@
 
 
 #endif
+
+extern const char* TAG;

@@ -23,5 +23,5 @@ amatch_interface.cpp \
 #LOCAL_SHARED_LIBRARIES := -lsndfile
 LOCAL_LDLIBS := -llog -lOpenSLES 
 
-#include $(BUILD_SHARED_LIBRARY)
-include $(BUILD_EXECUTABLE)
+include $(BUILD_SHARED_LIBRARY)
+#include $(BUILD_EXECUTABLE)

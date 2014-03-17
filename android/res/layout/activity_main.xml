@@ -4,49 +4,33 @@
     android:layout_height="match_parent"
     tools:context=".AmatchTestActivity" >
 
-    <Button
-        android:id="@+id/startsearch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView2"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="22dp"
-        android:text="Start Search" />
-
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/fpkeys_fn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_marginBottom="32dp"
-        android:text="Large Text"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView3"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
         android:text="Medium Text"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
-        android:id="@+id/stop"
+        android:id="@+id/btn_load_fpkeys"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView3"
-        android:layout_below="@+id/textView3"
-        android:text="Stop" />
+        android:layout_below="@+id/fpkeys_fn"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="18dp"
+        android:onClick="btn_load_fpkeysClick"
+        android:text="@string/load_fpkeys" />
 
-    <SeekBar
-        android:id="@+id/seekBar1"
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/btn_start_search"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/stop"
-        android:layout_marginTop="48dp" />
+        android:layout_below="@+id/btn_load_fpkeys"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:onClick="btn_start_searchClick"
+        android:text="@string/start_search" />
 
 </RelativeLayout>
