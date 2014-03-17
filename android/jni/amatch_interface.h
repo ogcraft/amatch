@@ -2,29 +2,31 @@
 extern "C" {
 #endif
 
-#include <android/log.h>
+//void start_process();
+//void stop_process();
 
-#if 0
+#define BUFFERFRAMES 1024
+#define VECSAMPS_MONO 64
+#define SR 11025
+#define NSAMPLES (SR * 30)
 
-#define LOGV(TAG,...) __android_log_print(ANDROID_LOG_VERBOSE, TAG,__VA_ARGS__)
-#define LOGD(TAG,...) __android_log_print(ANDROID_LOG_DEBUG  , TAG,__VA_ARGS__)
-#define LOGI(TAG,...) __android_log_print(ANDROID_LOG_INFO   , TAG,__VA_ARGS__)
-#define LOGW(TAG,...) __android_log_print(ANDROID_LOG_WARN   , TAG,__VA_ARGS__)
-#define LOGE(TAG,...) __android_log_print(ANDROID_LOG_ERROR  , TAG,__VA_ARGS__)
+struct amatch_context;
 
-#else
-#include <stdio.h>
-#define LOGV(TAG,...) printf(__VA_ARGS__)
-#define LOGD(TAG,...) printf(__VA_ARGS__)
-#define LOGI(TAG,...) printf(__VA_ARGS__)
-#define LOGW(TAG,...) printf(__VA_ARGS__)
-#define LOGE(TAG,...) printf(__VA_ARGS__)
+amatch_context* get_amatch_context();
+bool init_amatch_context();
+void destroy_amatch_context();
 
+bool open_audio_device();
 
-#endif
+size_t read_track_fpkeys(const char* fn);
 
-void start_process();
-void stop_process();
+void close_audo_device();
+
+int read_audio_in(float inbuffer[], size_t nsamples);
+
+int generate_fp_keys_from_in();
+		
+int match_sample();
 
 #ifdef __cplusplus
 };

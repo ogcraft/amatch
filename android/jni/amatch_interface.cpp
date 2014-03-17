@@ -218,17 +218,161 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 extern "C" {
 #endif
 
-SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_start_1process(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_BUFFERFRAMES_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
   (void)jenv;
   (void)jcls;
-  start_process();
+  result = (int)(1024);
+  jresult = (jint)result; 
+  return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_stop_1process(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_VECSAMPS_1MONO_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
   (void)jenv;
   (void)jcls;
-  stop_process();
+  result = (int)(64);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SR_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)(11025);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NSAMPLES_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)((11025*30));
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1amatch_1context(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  amatch_context *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (amatch_context *)get_amatch_context();
+  *(amatch_context **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_amatch_1generated_amatch_1interfaceJNI_init_1amatch_1context(JNIEnv *jenv, jclass jcls) {
+  jboolean jresult = 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (bool)init_amatch_context();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_destroy_1amatch_1context(JNIEnv *jenv, jclass jcls) {
+  (void)jenv;
+  (void)jcls;
+  destroy_amatch_context();
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_amatch_1generated_amatch_1interfaceJNI_open_1audio_1device(JNIEnv *jenv, jclass jcls) {
+  jboolean jresult = 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (bool)open_audio_device();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1track_1fpkeys(JNIEnv *jenv, jclass jcls, jstring jarg1) {
+  jlong jresult = 0 ;
+  char *arg1 = (char *) 0 ;
+  size_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)jenv->GetStringUTFChars(jarg1, 0);
+    if (!arg1) return 0;
+  }
+  result = read_track_fpkeys((char const *)arg1);
+  jresult = (jlong)result; 
+  if (arg1) jenv->ReleaseStringUTFChars(jarg1, (const char *)arg1);
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_close_1audo_1device(JNIEnv *jenv, jclass jcls) {
+  (void)jenv;
+  (void)jcls;
+  close_audo_device();
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1audio_1in(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2) {
+  jint jresult = 0 ;
+  float *arg1 ;
+  size_t arg2 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(float **)&jarg1; 
+  arg2 = (size_t)jarg2; 
+  result = (int)read_audio_in(arg1,arg2);
+  jresult = (jint)result; 
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_generate_1fp_1keys_1from_1in(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)generate_fp_keys_from_in();
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_match_1sample(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)match_sample();
+  jresult = (jint)result; 
+  return jresult;
 }
 
 
