@@ -21,7 +21,7 @@ const char* TAG = "Amatch";
 
 const char* amatch_version()
 {
-	return "1.1";
+	return "1.02";
 
 }
 struct amatch_context

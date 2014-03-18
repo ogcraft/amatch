@@ -18,7 +18,8 @@ import android.os.Message;
 public class AmatchTestActivity extends Activity {
     /** Called when the activity is first created. */
 	private static final String TAG = "Amatch";
-	private static final String track_keys_fn = "/storage/sdcard0/asearch/monstr-eng1-11025.fpkeys";
+	private final String track_keys_fn = "/storage/sdcard0/asearch/monstr-eng1-11025.fpkeys";
+	private final String translation_fn = "/storage/sdcard0/asearch/monstr-rus.wav";
 	private static double SEC_PER_KEY = 0.011609977324263039;
 	Thread load_fpkeys_thread;
 	Handler load_fpkeys_thread_handler = new Handler() {
