@@ -5,6 +5,8 @@ All rights reserved.
 */
 
 package com.ogcraft.amatchtest;
+import com.lamerman.FileDialog;
+import com.lamerman.SelectionMode;
 
 import amatch_generated.amatch_interface;
 import android.app.Activity;
@@ -14,13 +16,42 @@ import android.widget.TextView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class AmatchTestActivity extends Activity {
     /** Called when the activity is first created. */
 	private static final String TAG = "Amatch";
-	private final String track_keys_fn = "/storage/sdcard0/asearch/monstr-eng1-11025.fpkeys";
-	private final String translation_fn = "/storage/sdcard0/asearch/monstr-rus.wav";
+	private static final String data_root_path = "/storage/sdcard0/asearch";
+	private String track_keys_fn = data_root_path;
+	private String translation_fn = data_root_path;
 	private static double SEC_PER_KEY = 0.011609977324263039;
+	int file_selecting_button_id = R.id.btn_load_fpkeys;
 	Thread load_fpkeys_thread;
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
@@ -55,6 +86,40 @@ public class AmatchTestActivity extends Activity {
         super.onCreate(savedInstanceState);
         Log.d(TAG,"In onCreate()");
         setContentView(R.layout.activity_main);
+        final Button btnLoadFpkeys = (Button)findViewById(R.id.btn_load_fpkeys);
+        btnLoadFpkeys.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+            	file_selecting_button_id = R.id.btn_load_fpkeys;
+            	Log.d(TAG,"onClick() btnLoadFpkeys");
+                final Intent intent = new Intent(AmatchTestActivity.this.getBaseContext(), FileDialog.class);
+				intent.putExtra(FileDialog.START_PATH, data_root_path);
+                intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
+                // set file filter
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "fpkeys" });
+                intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                AmatchTestActivity.this.startActivityForResult(intent, FileAction.LOAD.value);
+            }
+        });
+        final Button btnLoadTranslation = (Button)findViewById(R.id.btn_load_translation);
+        btnLoadTranslation.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(final View v)
+            {
+            	file_selecting_button_id = R.id.btn_load_translation;
+            	Log.d(TAG,"onClick() btnLoadTranslation");
+                final Intent intent = new Intent(AmatchTestActivity.this.getBaseContext(), FileDialog.class);
+				intent.putExtra(FileDialog.START_PATH, data_root_path);
+                intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
+                // set file filter
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "mp3","ogg","wav" });
+                intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                AmatchTestActivity.this.startActivityForResult(intent, FileAction.LOAD.value);
+            }
+        });
         TextView v = (TextView)findViewById(R.id.fpkeys_fn);
 		v.setText("Amatch ver: " + amatch_interface.amatch_version());
 		((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
@@ -84,7 +149,40 @@ public class AmatchTestActivity extends Activity {
     	load_fpkeys_thread = null;
     	
     }
-    
+    @Override
+    public synchronized void onActivityResult(final int requestCode, final int resultCode, final Intent data)
+    {
+        if (resultCode == Activity.RESULT_OK)
+        {
+            final String filename = data.getStringExtra(FileDialog.RESULT_PATH);
+            switch (FileAction.fromValue(requestCode))
+            {
+                case LOAD:
+                    Log.d(TAG, "onActivity(): filename: " + filename);
+                    if(file_selecting_button_id == R.id.btn_load_fpkeys) {
+                    	Button b = (Button)findViewById(R.id.btn_load_fpkeys);
+                    	b.setText(filename);
+                    	btn_load_fpkeysClick(b);
+                    	track_keys_fn = filename;
+                    } else if(file_selecting_button_id == R.id.btn_load_translation) {
+                    	Button b = (Button)findViewById(R.id.btn_load_translation);
+                    	b.setText("Loaded");
+                    	b.setEnabled(false);
+                    	translation_fn = filename;
+                    	Log.d(TAG, "translation_fn: " + translation_fn);
+                    }
+                    break;
+                case SAVE:
+                    break;
+                case KEY:
+                    break;
+            }
+           
+        }
+        else if (resultCode == Activity.RESULT_CANCELED)
+            ; // do nothing
+    }
+
     public void btn_load_fpkeysClick(View view)
     {
     	TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
