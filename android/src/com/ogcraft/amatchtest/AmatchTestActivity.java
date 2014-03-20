@@ -5,14 +5,24 @@ All rights reserved.
 */
 
 package com.ogcraft.amatchtest;
+import amatch_generated.amatch_interface;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder; 
+import java.nio.FloatBuffer; 
 import com.lamerman.FileDialog;
 import com.lamerman.SelectionMode;
-
-import amatch_generated.amatch_interface;
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -51,7 +61,10 @@ public class AmatchTestActivity extends Activity {
 	private String track_keys_fn = data_root_path;
 	private String translation_fn = data_root_path;
 	private static double SEC_PER_KEY = 0.011609977324263039;
+	private double found_sec = 0;
 	int file_selecting_button_id = R.id.btn_load_fpkeys;
+	// Media Player
+    private  MediaPlayer mp;
 	Thread load_fpkeys_thread;
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
@@ -70,12 +83,14 @@ public class AmatchTestActivity extends Activity {
 		public void handleMessage(Message msg) {			  
 				Bundle bundle = msg.getData();
 				int i = bundle.getInt("FoundIndex");
+				long time_to_match_ms = bundle.getLong("time_to_match_ms");
 				Log.d(TAG,"FoundIndex: n = " + i);
-				double found_sec = i * SEC_PER_KEY;
+				found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
 				Log.d(TAG,"Found: sec = " + found_sec);
 				TextView v = (TextView)findViewById(R.id.found_display);
 				if(i > 10) {
 					v.setText("Found sec: " + found_sec);
+                	play_translation(translation_fn, found_sec);
 				} else {
 					v.setText("Not found");
 				}
@@ -85,6 +100,7 @@ public class AmatchTestActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG,"In onCreate()");
+        mp = new MediaPlayer();
         setContentView(R.layout.activity_main);
         final Button btnLoadFpkeys = (Button)findViewById(R.id.btn_load_fpkeys);
         btnLoadFpkeys.setOnClickListener(new OnClickListener()
@@ -146,6 +162,7 @@ public class AmatchTestActivity extends Activity {
 			// TODO Auto-generated catch block
 		//	e.printStackTrace();
 		//}
+    	mp.stop();
     	load_fpkeys_thread = null;
     	
     }
@@ -166,10 +183,13 @@ public class AmatchTestActivity extends Activity {
                     	track_keys_fn = filename;
                     } else if(file_selecting_button_id == R.id.btn_load_translation) {
                     	Button b = (Button)findViewById(R.id.btn_load_translation);
-                    	b.setText("Loaded");
+                    	
                     	b.setEnabled(false);
                     	translation_fn = filename;
                     	Log.d(TAG, "translation_fn: " + translation_fn);
+                    	//LoadWavFile(translation_fn);
+
+                    	b.setText("Loaded");
                     }
                     break;
                 case SAVE:
@@ -212,11 +232,15 @@ public class AmatchTestActivity extends Activity {
 		Runnable runnable = new Runnable() {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
+	        	long recording_start_ms = System.currentTimeMillis();
 	        	int found_index = match_sample();
-	        	Log.d(TAG,"fff: " + found_index);
+	        	long index_found_ms = System.currentTimeMillis();
+	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
+	        	Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
 	        	Message msg = recorder_thread_handler.obtainMessage();
     			Bundle bundle = new Bundle();
     			bundle.putInt("FoundIndex", found_index);
+    			bundle.putLong("time_to_match_ms", time_to_match_ms);
                 msg.setData(bundle);
                 recorder_thread_handler.sendMessage(msg);
 	        }
@@ -227,11 +251,6 @@ public class AmatchTestActivity extends Activity {
     
     private int match_sample()
     {
-//    	if(!amatch_interface.init_amatch_context()) {
-//			Log.e(TAG, "Failed to create amatch_context");	
-//		} else {
-//			Log.d(TAG,"amatch_context created");
-//		}
     	
 		if(!amatch_interface.open_audio_device()) {
     		Log.e(TAG,"Failed to open audio_device");
@@ -247,10 +266,27 @@ public class AmatchTestActivity extends Activity {
     	
     	amatch_interface.close_audo_device();
     	
-//    	amatch_interface.destroy_amatch_context();
-//		Log.d(TAG,"amatch_context destroyed");
-		
 		return found_index;
     
+    }
+    public void  play_translation(String fn, double from_sec){
+        // Play translation
+        try {
+            mp.reset();
+            mp.setDataSource(fn);
+            mp.prepare();
+             
+            // Move song to particular second
+            mp.seekTo((int)(from_sec*1000)); // position in milliseconds
+             
+            mp.start();
+          
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
