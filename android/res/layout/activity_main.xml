@@ -1,55 +1,71 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    
+    >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    
+    android:background="@drawable/background" 
+    android:layout_centerVertical="true"
     tools:context=".AmatchTestActivity" >
 
     <TextView
         android:id="@+id/fpkeys_fn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:text="Medium Text"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <Button
-        android:id="@+id/btn_load_fpkeys"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/fpkeys_fn"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="18dp"
-        android:onClick="btn_load_fpkeysClick"
-        android:text="Set Index File" />
-
-    <TextView
-        android:id="@+id/found_display"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/btn_load_fpkeys"
-        android:layout_below="@+id/btn_start_search"
-        android:layout_marginTop="63dp"
-        android:text=""
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent" 
+        android:gravity="center" 
+        android:textColor="#fff"
+        android:layout_marginTop="30dp"
+        android:text="                "
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <Button
+        android:id="@+id/btn_load_fpkeys"
+        android:layout_height="wrap_content" 
+        android:layout_width="fill_parent" 
+        android:layout_marginTop="30dp"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
+        android:gravity="center"
+        android:onClick="btn_load_fpkeysClick"
+        android:background="@drawable/btn_background"
+        android:text="Set Index File"
+        android:textColor="#000" />
+	
+	<Button
         android:id="@+id/btn_load_translation"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_load_fpkeys"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="34dp"
+        android:background="@drawable/btn_background"
+        android:gravity="center" 
+        android:textColor="#000"
+        android:layout_marginTop="30dp"
         android:text="Set Translation File" />
+    
+    <TextView
+        android:id="@+id/found_display"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" 
+        android:textColor="#fff"
+        android:layout_marginTop="30dp"        
+        android:text="                      "
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <Button
         android:id="@+id/btn_start_search"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/found_display"
-        android:layout_below="@+id/btn_load_translation"
-        android:layout_marginTop="22dp"
+        android:background="@drawable/btn_background"
+        android:gravity="center" 
+        android:textColor="#000"
+        android:layout_marginTop="50dp"
         android:onClick="btn_start_searchClick"
         android:text="@string/start_search" />
 
+</LinearLayout>
 </RelativeLayout>

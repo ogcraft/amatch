@@ -108,7 +108,7 @@ int generate_fp_keys_from_in()
 	size_t samps_collected = 0;
 	float  inbuffer[VECSAMPS_MONO]={0.0};
 	_ctx.rec_keys.clear();
-	for(int n = 0; n < (30*SR)/VECSAMPS_MONO; n++) {
+	for(int n = 0; n < (15*SR)/VECSAMPS_MONO; n++) {
 		int samps = read_audio_in(inbuffer,VECSAMPS_MONO);
 		//for(int i = 0; i < samps; i++) { printf("%f ", inbuffer[i]); }
 		//printf("\nn:%d collected:%d samps: %d\n", n, samps_collected, samps);

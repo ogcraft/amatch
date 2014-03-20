@@ -86,13 +86,13 @@ public class AmatchTestActivity extends Activity {
 				long time_to_match_ms = bundle.getLong("time_to_match_ms");
 				Log.d(TAG,"FoundIndex: n = " + i);
 				found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
-				Log.d(TAG,"Found: sec = " + found_sec);
+				Log.d(TAG,"Starting playing from " + found_sec + " sec");
 				TextView v = (TextView)findViewById(R.id.found_display);
 				if(i > 10) {
 					v.setText("Found sec: " + found_sec);
                 	play_translation(translation_fn, found_sec);
 				} else {
-					v.setText("Not found");
+					v.setText("Not found. Please sync again");
 				}
 			}
 		}; 
@@ -187,9 +187,7 @@ public class AmatchTestActivity extends Activity {
                     	b.setEnabled(false);
                     	translation_fn = filename;
                     	Log.d(TAG, "translation_fn: " + translation_fn);
-                    	//LoadWavFile(translation_fn);
-
-                    	b.setText("Loaded");
+                    	b.setText("Translation file loaded");
                     }
                     break;
                 case SAVE:
@@ -228,7 +226,8 @@ public class AmatchTestActivity extends Activity {
     	TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
     	v.setEnabled(false);
     	TextView v1 = (TextView)findViewById(R.id.found_display);
-		v1.setText("Searching...");
+		v1.setText("Please wait. Synchronizing...");
+		mp.stop();
 		Runnable runnable = new Runnable() {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
