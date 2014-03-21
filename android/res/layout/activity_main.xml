@@ -1,10 +1,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    
-    >
+    android:id="@+id/layout0" >
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -19,7 +20,7 @@
         android:layout_width="fill_parent" 
         android:gravity="center" 
         android:textColor="#fff"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:text="                "
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -27,7 +28,7 @@
         android:id="@+id/btn_load_fpkeys"
         android:layout_height="wrap_content" 
         android:layout_width="fill_parent" 
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:paddingRight="10dp"
         android:paddingLeft="10dp"
         android:gravity="center"
@@ -43,7 +44,7 @@
         android:background="@drawable/btn_background"
         android:gravity="center" 
         android:textColor="#000"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:text="Set Translation File" />
     
     <TextView
@@ -52,10 +53,10 @@
         android:layout_height="wrap_content"
         android:gravity="center" 
         android:textColor="#fff"
-        android:layout_marginTop="30dp"        
+        android:layout_marginTop="20dp"        
         android:text="                      "
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
+    
     <Button
         android:id="@+id/btn_start_search"
         android:layout_width="fill_parent"
@@ -63,9 +64,36 @@
         android:background="@drawable/btn_background"
         android:gravity="center" 
         android:textColor="#000"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="30dp"
         android:onClick="btn_start_searchClick"
         android:text="@string/start_search" />
-
+    
+    <TextView
+        android:id="@+id/progress_display"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" 
+        android:textColor="#fff"
+        android:layout_marginTop="20dp"        
+        android:text="                      "
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+	
+	<SeekBar
+        android:id="@+id/seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_marginTop="20dp" />
+    
+    <Button
+        android:id="@+id/btn_stop"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_background"
+        android:gravity="center" 
+        android:textColor="#000"
+        android:layout_marginTop="30dp"
+        android:onClick="btn_stopClick"
+        android:text="Stop" />
+    
 </LinearLayout>
 </RelativeLayout>

@@ -12,6 +12,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder; 
 import java.nio.FloatBuffer; 
+import java.util.concurrent.TimeUnit;
+
 import com.lamerman.FileDialog;
 import com.lamerman.SelectionMode;
 import android.app.Activity;
@@ -50,6 +52,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,14 +60,21 @@ import android.widget.Toast;
 public class AmatchTestActivity extends Activity {
     /** Called when the activity is first created. */
 	private static final String TAG = "Amatch";
-	private static final String data_root_path = "/storage/sdcard0/asearch";
+	private String data_root_path = "";
 	private String track_keys_fn = data_root_path;
 	private String translation_fn = data_root_path;
 	private static double SEC_PER_KEY = 0.011609977324263039;
 	private double found_sec = 0;
+	private double currentPlayingTime_ms = 0;
+	private double finalTime_ms = 0;
+	private long recording_start_ms = 0;
+	private long recording_end_ms = 0;
 	int file_selecting_button_id = R.id.btn_load_fpkeys;
 	// Media Player
     private  MediaPlayer mp;
+    private SeekBar seekbar;
+    private Handler seekbar_handler = new Handler();
+    private TextView progress_display_view;
 	Thread load_fpkeys_thread;
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
@@ -72,7 +82,7 @@ public class AmatchTestActivity extends Activity {
 				Bundle bundle = msg.getData();
 				long n = bundle.getLong("LoadedFpkeys");
 				TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
-				v.setText("Loaded " + n + " fpkeys");
+				v.setText("Index: " + track_keys_fn.substring(data_root_path.length()+1));
 				TextView v1 = (TextView)findViewById(R.id.btn_start_search);
 				v1.setEnabled(true);
 			}
@@ -85,23 +95,32 @@ public class AmatchTestActivity extends Activity {
 				int i = bundle.getInt("FoundIndex");
 				long time_to_match_ms = bundle.getLong("time_to_match_ms");
 				Log.d(TAG,"FoundIndex: n = " + i);
+				recording_end_ms = System.currentTimeMillis();
 				found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
 				Log.d(TAG,"Starting playing from " + found_sec + " sec");
 				TextView v = (TextView)findViewById(R.id.found_display);
+				double search_time_ms = recording_end_ms - recording_start_ms;
 				if(i > 10) {
-					v.setText("Found sec: " + found_sec);
+					v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
                 	play_translation(translation_fn, found_sec);
 				} else {
-					v.setText("Not found. Please sync again");
+					v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
 				}
 			}
 		}; 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        File f = Environment.getExternalStorageDirectory();
+        data_root_path = f.getAbsolutePath();
         Log.d(TAG,"In onCreate()");
         mp = new MediaPlayer();
-        setContentView(R.layout.activity_main);
+       
+        seekbar = (SeekBar)findViewById(R.id.seekbar);
+        seekbar.setClickable(false);
+        progress_display_view = (TextView)findViewById(R.id.progress_display);
+        
         final Button btnLoadFpkeys = (Button)findViewById(R.id.btn_load_fpkeys);
         btnLoadFpkeys.setOnClickListener(new OnClickListener()
         {
@@ -141,27 +160,11 @@ public class AmatchTestActivity extends Activity {
 		((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
 		TextView v1 = (TextView)findViewById(R.id.found_display);
 		v1.setText("");
-
-        //thread = new Thread() {
-		//	public void run() {
-		//		setPriority(Thread.MAX_PRIORITY);
-		//		//amatch_interface.start_process();
-		//	}
-		//};
-		//thread.start();   
+		
     }
     public void onDestroy(){
     	
     	super.onDestroy();
-    	//amatch_interface.stop_process();
-    	//try {
-			//thread.join();
-    		
-			
-		//} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-		//	e.printStackTrace();
-		//}
     	mp.stop();
     	load_fpkeys_thread = null;
     	
@@ -175,19 +178,21 @@ public class AmatchTestActivity extends Activity {
             switch (FileAction.fromValue(requestCode))
             {
                 case LOAD:
-                    Log.d(TAG, "onActivity(): filename: " + filename);
+                	File f = new File(filename);
+                	data_root_path = f.getParent();
+                    Log.d(TAG, "onActivity(): filename: " + filename + " data_root_path: " + data_root_path);
                     if(file_selecting_button_id == R.id.btn_load_fpkeys) {
-                    	Button b = (Button)findViewById(R.id.btn_load_fpkeys);
-                    	b.setText(filename);
-                    	btn_load_fpkeysClick(b);
                     	track_keys_fn = filename;
-                    } else if(file_selecting_button_id == R.id.btn_load_translation) {
-                    	Button b = (Button)findViewById(R.id.btn_load_translation);
+                    	Button b = (Button)findViewById(R.id.btn_load_fpkeys);
                     	
+                    	btn_load_fpkeysClick(b);        	
+                    	
+                    } else if(file_selecting_button_id == R.id.btn_load_translation) {
+                    	Button b = (Button)findViewById(R.id.btn_load_translation);   	
                     	b.setEnabled(false);
                     	translation_fn = filename;
                     	Log.d(TAG, "translation_fn: " + translation_fn);
-                    	b.setText("Translation file loaded");
+                    	b.setText("Translation: " + translation_fn.substring(data_root_path.length()+1));
                     }
                     break;
                 case SAVE:
@@ -221,6 +226,11 @@ public class AmatchTestActivity extends Activity {
   	  load_fpkeys_thread.start();
     }
     
+    public void btn_stopClick(View view)
+    {
+		mp.stop();
+	}
+    
     public void btn_start_searchClick(View view)
     {
     	TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
@@ -231,7 +241,8 @@ public class AmatchTestActivity extends Activity {
 		Runnable runnable = new Runnable() {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
-	        	long recording_start_ms = System.currentTimeMillis();
+	        	recording_start_ms = System.currentTimeMillis();
+	        	//int found_index = 85 * 2 * 60; //match_sample();
 	        	int found_index = match_sample();
 	        	long index_found_ms = System.currentTimeMillis();
 	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
@@ -274,11 +285,21 @@ public class AmatchTestActivity extends Activity {
             mp.reset();
             mp.setDataSource(fn);
             mp.prepare();
-             
+            
+            Log.d(TAG,"play_translation from sec: " + from_sec*1000);
             // Move song to particular second
             mp.seekTo((int)(from_sec*1000)); // position in milliseconds
              
             mp.start();
+            
+            finalTime_ms = mp.getDuration();
+            Log.d(TAG,"play_translation finalTime_ms: " + (finalTime_ms / 1000.0));
+            Log.d(TAG,"seekbar: " + seekbar);
+            seekbar.setMax((int)finalTime_ms);
+            long t = mp.getCurrentPosition();
+            Log.d(TAG, "play_translation(): t: " + (t / 1000.0));
+            seekbar.setProgress((int)t);
+            seekbar_handler.postDelayed(UpdateTranslationTime,100);
           
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -288,4 +309,22 @@ public class AmatchTestActivity extends Activity {
             e.printStackTrace();
         }
     }
+    private Runnable UpdateTranslationTime = new Runnable() {
+        public void run() {
+           currentPlayingTime_ms = mp.getCurrentPosition();
+           long min = TimeUnit.MILLISECONDS.toMinutes((long) currentPlayingTime_ms);
+           long sec = TimeUnit.MILLISECONDS.toSeconds((long) currentPlayingTime_ms) - 
+                   TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes((long) currentPlayingTime_ms));
+           
+           progress_display_view.setText(
+        		   String.format("Playing %.2f ( %3d:%02d ) sec from %.2f sec",
+                		   			currentPlayingTime_ms / 1000.0,
+                		   			min, sec,
+                		   			finalTime_ms / 1000.0
+        		   ));
+           
+           seekbar.setProgress((int)currentPlayingTime_ms);
+           seekbar_handler.postDelayed(this, 100);
+        }
+     };
 }
