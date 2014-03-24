@@ -218,6 +218,18 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 extern "C" {
 #endif
 
+SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1VER_1get(JNIEnv *jenv, jclass jcls) {
+  jstring jresult = 0 ;
+  char *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (char *)("1.13");
+  if (result) jresult = jenv->NewStringUTF((const char *)result);
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_BUFFERFRAMES_1get(JNIEnv *jenv, jclass jcls) {
   jint jresult = 0 ;
   int result;
@@ -254,13 +266,37 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SR_1get(JNIE
 }
 
 
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1TO_1RECORD_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)(20);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1TO_1MATCH_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)(5);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NSAMPLES_1get(JNIEnv *jenv, jclass jcls) {
   jint jresult = 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
-  result = (int)((11025*30));
+  result = (int)((11025*20));
   jresult = (jint)result; 
   return jresult;
 }
@@ -298,6 +334,18 @@ SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1amatch
   (void)jcls;
   result = (amatch_context *)get_amatch_context();
   *(amatch_context **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1start_1rec_1time(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  long result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (long)get_start_rec_time();
+  jresult = (jint)result; 
   return jresult;
 }
 
@@ -363,6 +411,20 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1audio_
   result = (int)read_audio_in(arg1,arg2);
   jresult = (jint)result; 
   
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_collect_1rec_1samples(JNIEnv *jenv, jclass jcls, jint jarg1) {
+  jint jresult = 0 ;
+  long arg1 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (long)jarg1; 
+  result = (int)collect_rec_samples(arg1);
+  jresult = (jint)result; 
   return jresult;
 }
 

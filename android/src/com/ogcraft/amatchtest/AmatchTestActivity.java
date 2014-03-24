@@ -75,6 +75,7 @@ public class AmatchTestActivity extends Activity {
     private SeekBar seekbar;
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
+    Thread recording_thread;
 	Thread load_fpkeys_thread;
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
@@ -87,8 +88,8 @@ public class AmatchTestActivity extends Activity {
 				v1.setEnabled(true);
 			}
 		}; 
-	Thread recorder_thread;
-	Handler recorder_thread_handler = new Handler() {
+	Thread matcher_thread;
+	Handler matcher_thread_handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {			  
 				Bundle bundle = msg.getData();
@@ -101,7 +102,7 @@ public class AmatchTestActivity extends Activity {
 				TextView v = (TextView)findViewById(R.id.found_display);
 				double search_time_ms = recording_end_ms - recording_start_ms;
 				if(i > 10) {
-					v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
+					v.setText(String.format("Found sec: %.2f Search took: %.2f sec", found_sec, search_time_ms/1000.0));
                 	play_translation(translation_fn, found_sec);
 				} else {
 					v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
@@ -112,6 +113,9 @@ public class AmatchTestActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        start_recording_thread();
+        
         File f = Environment.getExternalStorageDirectory();
         data_root_path = f.getAbsolutePath();
         Log.d(TAG,"In onCreate()");
@@ -133,7 +137,7 @@ public class AmatchTestActivity extends Activity {
 				intent.putExtra(FileDialog.START_PATH, data_root_path);
                 intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
                 // set file filter
-                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "fpkeys" });
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "fpkeys", "fpkey" });
                 intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
                 AmatchTestActivity.this.startActivityForResult(intent, FileAction.LOAD.value);
             }
@@ -162,13 +166,15 @@ public class AmatchTestActivity extends Activity {
 		v1.setText("");
 		
     }
-    public void onDestroy(){
+    @SuppressWarnings("deprecation")
+	public void onDestroy(){
     	
     	super.onDestroy();
     	mp.stop();
     	load_fpkeys_thread = null;
-    	
+    	recording_thread.interrupt();
     }
+    
     @Override
     public synchronized void onActivityResult(final int requestCode, final int resultCode, final Intent data)
     {
@@ -240,37 +246,62 @@ public class AmatchTestActivity extends Activity {
 		mp.stop();
 		Runnable runnable = new Runnable() {
 	        public void run() {     	
+	        	recording();
 	        	Log.d(TAG,"Start searching");
-	        	recording_start_ms = System.currentTimeMillis();
 	        	//int found_index = 85 * 2 * 60; //match_sample();
 	        	int found_index = match_sample();
 	        	long index_found_ms = System.currentTimeMillis();
 	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
 	        	Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
-	        	Message msg = recorder_thread_handler.obtainMessage();
+	        	Message msg = matcher_thread_handler.obtainMessage();
     			Bundle bundle = new Bundle();
     			bundle.putInt("FoundIndex", found_index);
     			bundle.putLong("time_to_match_ms", time_to_match_ms);
                 msg.setData(bundle);
-                recorder_thread_handler.sendMessage(msg);
+                matcher_thread_handler.sendMessage(msg);
 	        }
       };
-      recorder_thread  = new Thread(runnable);
-  	  recorder_thread.start();
+      matcher_thread  = new Thread(runnable);
+  	  matcher_thread.start();
     }
-    
-    private int match_sample()
+    private void start_recording_thread()
     {
-    	
-		if(!amatch_interface.open_audio_device()) {
+    	if(!amatch_interface.open_audio_device()) {
     		Log.e(TAG,"Failed to open audio_device");
-    		return 0;
+    		return;
 		}
     	
     	Log.d(TAG,"Skip 25 frames...");
     	amatch_interface.skip_samples(25);
+    	
+    	Runnable runnable = new Runnable() {
+	        public void run() {     	
+	        	recording();
+	        }
+      };
+      recording_thread  = new Thread(runnable);
+  	  recording_thread.start();
+    }
+    
+    private void recording()
+    {
+    	while(true) {
+    		recording_start_ms = System.currentTimeMillis();
 
-       	Log.d(TAG,"START RECORDING...");			
+    		Log.d(TAG,"START RECORDING at " + recording_start_ms);
+
+    		amatch_interface.collect_rec_samples(0);
+    		
+    		if (Thread.interrupted()) {
+            // We've been interrupted
+            return;
+    		}
+    	}
+    }
+    
+    private int match_sample()
+    {
+    	       	
        	amatch_interface.generate_fp_keys_from_in();
     	int found_index = amatch_interface.match_sample();
     	

@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "amatch_interface.h"
 #include "opensl_io.h"
-#if 1
+
 
 //void writekeys(const key_vector keys, const char* fn);
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 	read_track_fpkeys(track_keys_fn);
 	
 	const char* sample_keys_fn = "/storage/sdcard0/asearch/monstr-sample.fpkeys";
-    
+    const char* translation_fn = "/storage/sdcard0/asearch/monstr-rus-44k.mp3"
 
 	int samps = 0;
 	
@@ -73,32 +73,4 @@ int main(int argc, char** argv)
 //	destroy_amatch_context();
 	return 0;
 }
-
-#else
-
-#define BUFFERFRAMES 1024
-#define VECSAMPS_MONO 64
-//#define VECSAMPS_STEREO 128
-#define SR 11025
-
-int main() 
-{
-  OPENSL_STREAM  *p;
-  int samps, i, j;
-  float  inbuffer[VECSAMPS_MONO]; //, outbuffer[VECSAMPS_STEREO];
-  p = android_OpenAudioDevice(SR,1,2,BUFFERFRAMES);
-  if(p == NULL) return 0; 
-  int on = 1;
-  while(on) {
-   samps = android_AudioIn(p,inbuffer,VECSAMPS_MONO);
-   for(i = 0; i < samps; i++) {
-		printf("%f ", inbuffer[i]);
-	   //outbuffer[j] = outbuffer[j+1] = inbuffer[i];
-   }
-   //android_AudioOut(p,outbuffer,samps*2); 
-  }  
-  android_CloseAudioDevice(p);
-  return 0;
-}
-#endif
 

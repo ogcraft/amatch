@@ -7,6 +7,7 @@ amatch_interface.c:
 #include <sndfile.h>
 #include <sys/time.h> 
 #include <assert.h> 
+#include <algorithm>
 
 #include "amatch.h"
 #include "utils.h"
@@ -21,26 +22,41 @@ const char* TAG = "Amatch";
 
 const char* amatch_version()
 {
-	return "1.10";
+	return AMATCH_VER;
 
 }
+
 struct amatch_context
 {
 	
 	OPENSL_STREAM  *p;
 	key_vector track_keys;
 	key_vector rec_keys;
-	float  record_buffer[NSAMPLES];
-
+	int sec_to_record;
+	int sec_to_match;
+	float  record_buffer[2][NSAMPLES];
+	int recording_buff_index;
+	int search_buff_index;
+	int samps_collected[2];
+	long start_rec_time[2];
 	amatch_context();
 };
 
 static amatch_context _ctx;
 
 amatch_context::amatch_context()
-	:p(NULL),track_keys(),rec_keys()
+	:p(NULL),
+	 track_keys(),
+	 rec_keys(),
+	 sec_to_record(SEC_TO_RECORD),
+	 sec_to_match(SEC_TO_MATCH),
+	 recording_buff_index(0),
+	 search_buff_index(1)
 {
-
+	samps_collected[0]=0;
+	samps_collected[1]=0;
+	start_rec_time[0] =0;
+	start_rec_time[1] =0;
 }
 
 amatch_context* get_amatch_context()
@@ -82,6 +98,27 @@ size_t read_track_fpkeys(const char* fn)
 	return n;
 }
 
+int recording_buff_index()
+{
+	return _ctx.recording_buff_index;
+}
+
+int searching_buff_index()
+{
+	return _ctx.search_buff_index;
+}
+
+void swap_rec_buff_indexes()
+{
+	LOGD(TAG,"Swaping %d -> %d\n", _ctx.recording_buff_index, _ctx.search_buff_index);
+	std::swap(_ctx.recording_buff_index, _ctx.search_buff_index);
+}
+
+long get_start_rec_time()
+{
+	return _ctx.start_rec_time[recording_buff_index()];
+}
+
 void skip_samples(int nsamples)
 {
 	float  inbuffer[VECSAMPS_MONO]={0.0};
@@ -102,25 +139,41 @@ int read_audio_in(float inbuffer[], size_t nsamples)
 	return samps;
 }
 
-int generate_fp_keys_from_in()
+int collect_rec_samples(long start_rec_time)
 {
-	LOGD(TAG,"generate_fp_keys_from_in()");
-	size_t samps_collected = 0;
 	float  inbuffer[VECSAMPS_MONO]={0.0};
-	_ctx.rec_keys.clear();
-	for(int n = 0; n < (15*SR)/VECSAMPS_MONO; n++) {
+
+	int buff_index = recording_buff_index();
+	LOGD(TAG, "collect_rec_samples(%d): buffer: %d\n", start_rec_time, buff_index);
+	_ctx.samps_collected[buff_index] = 0;
+
+	_ctx.start_rec_time[buff_index] = start_rec_time;
+
+	long max_samps = _ctx.sec_to_record * SR;
+
+	for(int n = 0; n < max_samps/VECSAMPS_MONO; n++) {
 		int samps = read_audio_in(inbuffer,VECSAMPS_MONO);
 		//for(int i = 0; i < samps; i++) { printf("%f ", inbuffer[i]); }
 		//printf("\nn:%d collected:%d samps: %d\n", n, samps_collected, samps);
-		std::copy(&inbuffer[0],&inbuffer[samps], &(_ctx.record_buffer[samps_collected]));
-		samps_collected += samps;
-		if(samps_collected >= SR*20) {
+		std::copy(&inbuffer[0],&inbuffer[samps], &(_ctx.record_buffer[buff_index][_ctx.samps_collected[buff_index]]));
+		_ctx.samps_collected[buff_index] += samps;
+		if(_ctx.samps_collected[buff_index] >= max_samps) {
 			break;
 		}
-	}  
-	LOGD(TAG,"Collected samps: %d\n", samps_collected);
-	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
-	fpkeys_from_samples(_ctx.record_buffer, samps_collected, SR, _ctx.rec_keys);
+	}
+	LOGD(TAG,"Collected samps: %d\n", _ctx.samps_collected[buff_index]);
+	swap_rec_buff_indexes();
+	return _ctx.samps_collected[buff_index];
+}
+
+int generate_fp_keys_from_in()
+{
+	LOGD(TAG,"generate_fp_keys_from_in()");
+	int buff_index = searching_buff_index();
+	_ctx.rec_keys.clear();
+	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[searching_buff_index][i]); }
+	fpkeys_from_samples(_ctx.record_buffer[buff_index], _ctx.samps_collected[buff_index],
+						SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
 	return _ctx.rec_keys.size();
 }
@@ -128,7 +181,7 @@ int generate_fp_keys_from_in()
 int match_sample()
 {
 	LOGD(TAG,"match_sample()");
-	double nsecs_to_match = 5.0;
+	double nsecs_to_match = (double) _ctx.sec_to_match;
 	double start_sec_of_track = 0.1;
 	double end_sec_of_track = 0.1;
 	size_t sample_size_keys = _ctx.rec_keys.size();
