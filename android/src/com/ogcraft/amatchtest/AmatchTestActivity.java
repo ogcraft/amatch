@@ -161,10 +161,15 @@ public class AmatchTestActivity extends Activity {
 		TextView v1 = (TextView)findViewById(R.id.found_display);
 		v1.setText("");
 		
+		if(!amatch_interface.open_audio_device()) {
+    		Log.e(TAG,"Failed to open audio_device");
+    		//return 0;
+		}
     }
     public void onDestroy(){
     	
     	super.onDestroy();
+    	amatch_interface.close_audo_device();
     	mp.stop();
     	load_fpkeys_thread = null;
     	
@@ -242,8 +247,8 @@ public class AmatchTestActivity extends Activity {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
 	        	recording_start_ms = System.currentTimeMillis();
-	        	//int found_index = 85 * 2 * 60; //match_sample();
-	        	int found_index = match_sample();
+	        	int found_index = 85 * 2 * 60; //match_sample();
+	        	//int found_index = match_sample();
 	        	long index_found_ms = System.currentTimeMillis();
 	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
 	        	Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
@@ -262,10 +267,10 @@ public class AmatchTestActivity extends Activity {
     private int match_sample()
     {
     	
-		if(!amatch_interface.open_audio_device()) {
-    		Log.e(TAG,"Failed to open audio_device");
-    		return 0;
-		}
+		//if(!amatch_interface.open_audio_device()) {
+    	//	Log.e(TAG,"Failed to open audio_device");
+    	//	return 0;
+		//}
     	
     	Log.d(TAG,"Skip 25 frames...");
     	amatch_interface.skip_samples(25);
@@ -274,7 +279,7 @@ public class AmatchTestActivity extends Activity {
        	amatch_interface.generate_fp_keys_from_in();
     	int found_index = amatch_interface.match_sample();
     	
-    	amatch_interface.close_audo_device();
+    	//amatch_interface.close_audo_device();
     	
 		return found_index;
     

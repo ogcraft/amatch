@@ -2,11 +2,14 @@
 extern "C" {
 #endif
 
-
+#define AMATCH_VER "1.13"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
-#define NSAMPLES (SR * 30)
+#define SEC_TO_RECORD 20
+#define SEC_TO_MATCH 5
+#define NSAMPLES (SR * SEC_TO_RECORD)
+
 #define SEC_PER_KEY 0.011609977324263039
 
 struct amatch_context;

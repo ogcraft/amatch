@@ -160,7 +160,7 @@ static SLresult openSLPlayOpen(OPENSL_STREAM *p)
     if(result != SL_RESULT_SUCCESS) goto end_openaudio;
 
     // set the player's state to playing
-    result = (*p->bqPlayerPlay)->SetPlayState(p->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+    result = (*p->bqPlayerPlay)->SetPlayState(p->bqPlayerPlay, SL_PLAYSTATE_STOPPED);
 
     if((p->playBuffer = (short *) calloc(p->outBufSamples, sizeof(short))) == NULL) {
       return -1;
@@ -267,7 +267,7 @@ static SLresult openSLRecOpen(OPENSL_STREAM *p){
     result = (*p->recorderBufferQueue)->RegisterCallback(p->recorderBufferQueue, bqRecorderCallback,
 							 p);
     if (SL_RESULT_SUCCESS != result) goto end_recopen;
-    result = (*p->recorderRecord)->SetRecordState(p->recorderRecord, SL_RECORDSTATE_RECORDING);
+    result = (*p->recorderRecord)->SetRecordState(p->recorderRecord, SL_RECORDSTATE_STOPPED);
 
     if((p->recBuffer = (short *) calloc(p->inBufSamples, sizeof(short))) == NULL) {
       return -1;
@@ -535,3 +535,21 @@ free_circular_buffer (circular_buffer *p){
   free(p->buffer);
   free(p);
 }
+
+//////////////////////////////////////////////////////
+
+SLresult setRecorderState(OPENSL_STREAM *p, SLuint32 st)
+{
+  SLresult result;
+  result = (*p->recorderRecord)->SetRecordState(p->recorderRecord, st);
+  return result;
+}
+
+SLresult setPlayerState(OPENSL_STREAM *p, SLuint32 st)
+{
+  SLresult result;
+      // set the player's state to playing
+    result = (*p->bqPlayerPlay)->SetPlayState(p->bqPlayerPlay, st);
+    return result;
+}
+

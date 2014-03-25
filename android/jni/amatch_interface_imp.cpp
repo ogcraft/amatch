@@ -7,13 +7,14 @@ amatch_interface.c:
 #include <sndfile.h>
 #include <sys/time.h> 
 #include <assert.h> 
+#include <algorithm>
 
 #include "amatch.h"
 #include "utils.h"
 #include "amatch_interface.h"
 #include "opensl_io.h"
 #include <android/log.h>
-#include "opensl_io.h"
+#include "opensl_io2.h"
 
 #include "logging.h"
 
@@ -21,7 +22,7 @@ const char* TAG = "Amatch";
 
 const char* amatch_version()
 {
-	return "1.10";
+	return AMATCH_VER;
 
 }
 struct amatch_context
