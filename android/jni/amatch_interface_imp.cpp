@@ -12,7 +12,6 @@ amatch_interface.c:
 #include "amatch.h"
 #include "utils.h"
 #include "amatch_interface.h"
-#include "opensl_io.h"
 #include <android/log.h>
 #include "opensl_io2.h"
 
@@ -72,6 +71,7 @@ amatch_context* get_amatch_context()
 bool open_audio_device()
 {
 	_ctx.p = android_OpenAudioDevice(SR,1,1,BUFFERFRAMES);
+	LOGD(TAG,"open_audio_device(): 0x%x\n", _ctx.p);
 	return _ctx.p != NULL;
 }
 
@@ -93,7 +93,9 @@ void skip_samples(int nsamples)
 
 void close_audo_device()
 {
+		LOGD(TAG,"close_audio_device()\n");
 		if(_ctx.p) android_CloseAudioDevice(_ctx.p);
+
 		_ctx.p = NULL;
 }
 
@@ -103,23 +105,34 @@ int read_audio_in(float inbuffer[], size_t nsamples)
 	return samps;
 }
 
+int recording()
+{
+	LOGD(TAG,"recording()");
+
+	size_t samps_collected = 0;
+
+	float  inbuffer[VECSAMPS_MONO]={0.0};
+
+	for(int n = 0; n < (SEC_TO_RECORD*SR)/VECSAMPS_MONO; n++) {
+		int samps = read_audio_in(inbuffer,VECSAMPS_MONO);
+		//for(int i = 0; i < 10; i++) { LOGD(TAG,"%f ", inbuffer[i]); }
+		//LOGD(TAG,"\nn:%d collected:%d samps: %d\n", n, samps_collected, samps);
+		std::copy(&inbuffer[0],&inbuffer[samps], &(_ctx.record_buffer[samps_collected]));
+		samps_collected += samps;
+		if(samps_collected >= SR*SEC_TO_RECORD) {
+				break;
+		}
+	}
+	LOGD(TAG,"recording(): Collected samps: %d\n", samps_collected);
+	return samps_collected;
+
+}
+
 int generate_fp_keys_from_in()
 {
 	LOGD(TAG,"generate_fp_keys_from_in()");
+	return 0;
 	size_t samps_collected = 0;
-	float  inbuffer[VECSAMPS_MONO]={0.0};
-	_ctx.rec_keys.clear();
-	for(int n = 0; n < (15*SR)/VECSAMPS_MONO; n++) {
-		int samps = read_audio_in(inbuffer,VECSAMPS_MONO);
-		//for(int i = 0; i < samps; i++) { printf("%f ", inbuffer[i]); }
-		//printf("\nn:%d collected:%d samps: %d\n", n, samps_collected, samps);
-		std::copy(&inbuffer[0],&inbuffer[samps], &(_ctx.record_buffer[samps_collected]));
-		samps_collected += samps;
-		if(samps_collected >= SR*20) {
-			break;
-		}
-	}  
-	LOGD(TAG,"Collected samps: %d\n", samps_collected);
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
 	fpkeys_from_samples(_ctx.record_buffer, samps_collected, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
@@ -145,6 +158,41 @@ int match_sample()
 	LOGD(TAG,"match_sample(): Found: %d\n", found_index);
 	return found_index;
 }
+
+void start_playing()
+{
+	setPlayerState(_ctx.p, SL_PLAYSTATE_PLAYING);
+}
+void stop_playing()
+{
+	setPlayerState(_ctx.p, SL_PLAYSTATE_STOPPED);
+}
+void pause_playing()
+{
+	setPlayerState(_ctx.p, SL_PLAYSTATE_PAUSED);
+}
+
+void start_recording()
+{
+	setRecorderState(_ctx.p, SL_RECORDSTATE_RECORDING);
+}
+void stop_recording()
+{
+	setRecorderState(_ctx.p, SL_RECORDSTATE_STOPPED);
+}
+void pause_recording()
+{
+	setRecorderState(_ctx.p, SL_RECORDSTATE_PAUSED);
+}
+int player_state()
+{
+	return (int) getPlayState(_ctx.p);
+}
+int recorder_state()
+{
+	return getRecorderState(_ctx.p);
+}
+
 
 #if 0
 static int on;

@@ -26,7 +26,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include "logging.h"
+#include <assert.h>
 #include "opensl_io2.h"
 #define CONV16BIT 32768
 #define CONVMYFLT (1./32768.)
@@ -553,3 +554,26 @@ SLresult setPlayerState(OPENSL_STREAM *p, SLuint32 st)
     return result;
 }
 
+SLresult getPlayState(OPENSL_STREAM *p)
+{
+    // make sure the URI audio player was created
+    if (NULL != *p->bqPlayerPlay) {
+    	SLuint32 state = 0;
+    	SLresult result = (*p->bqPlayerPlay)->GetPlayState(p->bqPlayerPlay, &state);
+        assert(SL_RESULT_SUCCESS == result);
+        return state;
+    }
+    return 0;
+}
+
+SLresult getRecorderState(OPENSL_STREAM *p)
+{
+    // make sure the URI audio player was created
+    if (NULL != *p->recorderRecord) {
+    	SLuint32 state = 0;
+    	SLresult result = (*p->recorderRecord)->GetRecordState(p->recorderRecord, &state);
+        assert(SL_RESULT_SUCCESS == result);
+        return state;
+    }
+    return 0;
+}

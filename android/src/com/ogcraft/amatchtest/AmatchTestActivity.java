@@ -60,6 +60,7 @@ import android.widget.Toast;
 public class AmatchTestActivity extends Activity {
     /** Called when the activity is first created. */
 	private static final String TAG = "Amatch";
+	private boolean isEngineInitialized = false;
 	private String data_root_path = "";
 	private String track_keys_fn = data_root_path;
 	private String translation_fn = data_root_path;
@@ -76,6 +77,10 @@ public class AmatchTestActivity extends Activity {
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
 	Thread load_fpkeys_thread;
+	Thread match_thread;
+	Thread player_thread;
+	Thread recorder_thread;
+	
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {			  
@@ -87,8 +92,8 @@ public class AmatchTestActivity extends Activity {
 				v1.setEnabled(true);
 			}
 		}; 
-	Thread recorder_thread;
-	Handler recorder_thread_handler = new Handler() {
+
+	Handler player_thread_handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {			  
 				Bundle bundle = msg.getData();
@@ -108,6 +113,7 @@ public class AmatchTestActivity extends Activity {
 				}
 			}
 		}; 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,16 +166,16 @@ public class AmatchTestActivity extends Activity {
 		((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
 		TextView v1 = (TextView)findViewById(R.id.found_display);
 		v1.setText("");
-		
-		if(!amatch_interface.open_audio_device()) {
-    		Log.e(TAG,"Failed to open audio_device");
-    		//return 0;
-		}
+		start_recording_thread();
     }
     public void onDestroy(){
     	
     	super.onDestroy();
+    	Log.d(TAG, "onDestroy(): Stop recording.");
+    	amatch_interface.stop_recording();
     	amatch_interface.close_audo_device();
+    	recorder_thread.interrupt();
+    	isEngineInitialized = false;
     	mp.stop();
     	load_fpkeys_thread = null;
     	
@@ -252,12 +258,45 @@ public class AmatchTestActivity extends Activity {
 	        	long index_found_ms = System.currentTimeMillis();
 	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
 	        	Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
-	        	Message msg = recorder_thread_handler.obtainMessage();
+	        	Message msg = player_thread_handler.obtainMessage();
     			Bundle bundle = new Bundle();
     			bundle.putInt("FoundIndex", found_index);
     			bundle.putLong("time_to_match_ms", time_to_match_ms);
                 msg.setData(bundle);
-                recorder_thread_handler.sendMessage(msg);
+                player_thread_handler.sendMessage(msg);
+	        }
+      };
+      match_thread  = new Thread(runnable);
+  	  match_thread.start();
+    }
+    
+    public void start_recording_thread()
+    {	
+    	if(!isEngineInitialized) {
+    		if(!amatch_interface.open_audio_device()) {
+    			Log.e(TAG,"Failed to open audio_device");
+    			return;
+    		} else {
+    			
+    			isEngineInitialized = true;
+    		}
+    	}
+ 
+    	Runnable runnable = new Runnable() {
+	        public void run() {     	
+	        	Log.d(TAG,"Start recording thread");
+	           	amatch_interface.start_recording();
+	        	recording_start_ms = System.currentTimeMillis();
+	        	Log.d(TAG,"Recorder state: " + amatch_interface.recorder_state());
+	        	try {
+	        		while(!Thread.currentThread().isInterrupted()){
+		        	      amatch_interface.recording();
+		        	      Thread.sleep(1000);
+		        	 }
+	             }
+	             catch (InterruptedException x) {
+	                return;
+	             }
 	        }
       };
       recorder_thread  = new Thread(runnable);
@@ -271,7 +310,7 @@ public class AmatchTestActivity extends Activity {
     	//	Log.e(TAG,"Failed to open audio_device");
     	//	return 0;
 		//}
-    	
+    	amatch_interface.start_recording();
     	Log.d(TAG,"Skip 25 frames...");
     	amatch_interface.skip_samples(25);
 

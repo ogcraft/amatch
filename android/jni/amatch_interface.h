@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.13"
+#define AMATCH_VER "1.14"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
@@ -32,6 +32,18 @@ int read_audio_in(float inbuffer[], size_t nsamples);
 int generate_fp_keys_from_in();
 		
 int match_sample();
+
+int recording();
+
+void start_playing();
+void stop_playing();
+void pause_playing();
+void start_recording();
+void stop_recording();
+void pause_recording();
+int player_state();
+int recorder_state();
+
 
 #ifdef __cplusplus
 };
