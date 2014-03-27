@@ -13,7 +13,7 @@ amatch_interface.c:
 #include "utils.h"
 #include "amatch_interface.h"
 #include <android/log.h>
-#include "opensl_io2.h"
+#include "opensl_io4.h"
 
 #include "logging.h"
 
@@ -71,7 +71,7 @@ amatch_context* get_amatch_context()
 bool open_audio_device()
 {
 	_ctx.p = android_OpenAudioDevice(SR,1,1,BUFFERFRAMES);
-	LOGD(TAG,"open_audio_device(): 0x%x\n", _ctx.p);
+	LOGD(TAG,"open_audio_device(): 0x%p\n", (void*)_ctx.p);
 	return _ctx.p != NULL;
 }
 
@@ -79,7 +79,7 @@ size_t read_track_fpkeys(const char* fn)
 {
 	size_t n = read_keys_from_file(fn, _ctx.track_keys);
 	assert(n == _ctx.track_keys.size());
-	LOGD(TAG,"Read track fpkeys: %lu (%f secs) from: %s\n", _ctx.track_keys.size(), sec_per_sample*(_ctx.track_keys.size()) , fn);
+	LOGD(TAG,"Read track fpkeys: %u (%f secs) from: %s\n", _ctx.track_keys.size(), sec_per_sample*(_ctx.track_keys.size()) , fn);
 	return n;
 }
 

@@ -8,7 +8,7 @@ LOCAL_CFLAGS := -O3
 LOCAL_CPPFLAGS :=$(LOCAL_CFLAGS)
 
 LOCAL_SRC_FILES := amatch_interface_imp.cpp \
-opensl_io2.cpp \
+opensl_io4.cpp \
 amatch_main.cpp \
 amatch_interface.cpp \
 ../../src/amatch.cpp \

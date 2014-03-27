@@ -34,17 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <SLES/OpenSLES_Android.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <boost/circular_buffer.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-typedef struct _circular_buffer {
-  char *buffer;
-  int  wp;
-  int rp;
-  int size;
-} circular_buffer;
+typedef  boost::circular_buffer<char> ringbuffer;
 
 typedef struct opensl_stream {
   
@@ -72,8 +68,8 @@ typedef struct opensl_stream {
   short *recBuffer;
   short *playBuffer;
 
-  circular_buffer *outrb;
-  circular_buffer *inrb;
+  ringbuffer* outrb;
+  ringbuffer* inrb;
 
   // size of buffers
   int outBufSamples;
@@ -99,6 +95,10 @@ typedef struct opensl_stream {
   Read a buffer from the OpenSL stream *p, of size samples. Returns the number of samples read.
   */
   int android_AudioIn(OPENSL_STREAM *p, float *buffer,int size);
+  /* 
+  Read a buffer from the OpenSL stream *p, of size samples from the end of buffer. Returns the number of samples read.
+  */
+  int android_AudioInLast(OPENSL_STREAM *p,float *buffer,int size);
   /*
   Write a buffer to the OpenSL stream *p, of size samples. Returns the number of samples written.
   */
