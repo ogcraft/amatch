@@ -290,13 +290,13 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1TO_1MAT
 }
 
 
-SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NSAMPLES_1get(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NRECSAMPLES_1get(JNIEnv *jenv, jclass jcls) {
   jint jresult = 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
-  result = (int)((11025*20));
+  result = (int)((11025*(20+1)));
   jresult = (jint)result; 
   return jresult;
 }
@@ -322,6 +322,18 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_amatch_1v
   (void)jcls;
   result = (char *)amatch_version();
   if (result) jresult = jenv->NewStringUTF((const char *)result);
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_nrecsamples(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)nrecsamples();
+  jresult = (jint)result; 
   return jresult;
 }
 

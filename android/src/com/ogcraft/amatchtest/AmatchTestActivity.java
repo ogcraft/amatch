@@ -289,10 +289,14 @@ public class AmatchTestActivity extends Activity {
 	        	recording_start_ms = System.currentTimeMillis();
 	        	Log.d(TAG,"Recorder state: " + amatch_interface.recorder_state());
 	        	try {
+	        		int nmax = amatch_interface.nrecsamples();
 	        		while(!Thread.currentThread().isInterrupted()){
-		        	      amatch_interface.recording();
-		        	      Thread.sleep(1000);
-		        	 }
+		        	      int n = amatch_interface.recording();
+		        	      if(n >= nmax) {
+		        	    	  Log.d(TAG,"Recording thread: samples:" + n);
+		        	    	  Thread.sleep(1000);  
+		        	      }
+		        	}
 	             }
 	             catch (InterruptedException x) {
 	                return;

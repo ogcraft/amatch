@@ -24,21 +24,27 @@ const char* amatch_version()
 	return AMATCH_VER;
 
 }
+
+int nrecsamples()
+{
+	return NRECSAMPLES;
+}
+
 struct amatch_context
 {
 	
 	OPENSL_STREAM  *p;
 	key_vector track_keys;
 	key_vector rec_keys;
-	float  record_buffer[NSAMPLES];
-
+	//float  record_buffer[NSAMPLES];
+	boost::circular_buffer<float> record_buffer;
 	amatch_context();
 };
 
 static amatch_context _ctx;
 
 amatch_context::amatch_context()
-	:p(NULL),track_keys(),rec_keys()
+	:p(NULL),track_keys(),rec_keys(),record_buffer(NRECSAMPLES)
 {
 
 }
@@ -101,11 +107,20 @@ void close_audo_device()
 
 int read_audio_in(float inbuffer[], size_t nsamples)
 {
-	int samps = android_AudioIn(_ctx.p, inbuffer, nsamples);
+	int samps = android_AudioInLast(_ctx.p, inbuffer, nsamples);
 	return samps;
 }
 
 int recording()
+{
+	//LOGD(TAG,"recording()");
+	collect_AudioIn(_ctx.p, _ctx.record_buffer);
+	//LOGD(TAG,"recording(): Collected samps: %d\n", _ctx.record_buffer.size());
+	return _ctx.record_buffer.size();
+
+}
+
+int recording1()
 {
 	LOGD(TAG,"recording()");
 
@@ -117,7 +132,7 @@ int recording()
 		int samps = read_audio_in(inbuffer,VECSAMPS_MONO);
 		//for(int i = 0; i < 10; i++) { LOGD(TAG,"%f ", inbuffer[i]); }
 		//LOGD(TAG,"\nn:%d collected:%d samps: %d\n", n, samps_collected, samps);
-		std::copy(&inbuffer[0],&inbuffer[samps], &(_ctx.record_buffer[samps_collected]));
+		std::copy(&inbuffer[0],&inbuffer[samps], _ctx.record_buffer.end() + samps_collected);
 		samps_collected += samps;
 		if(samps_collected >= SR*SEC_TO_RECORD) {
 				break;
@@ -134,7 +149,7 @@ int generate_fp_keys_from_in()
 	return 0;
 	size_t samps_collected = 0;
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
-	fpkeys_from_samples(_ctx.record_buffer, samps_collected, SR, _ctx.rec_keys);
+	//fpkeys_from_samples(_ctx.record_buffer, samps_collected, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
 	return _ctx.rec_keys.size();
 }

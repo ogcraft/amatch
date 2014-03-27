@@ -8,13 +8,15 @@ extern "C" {
 #define SR 11025
 #define SEC_TO_RECORD 20
 #define SEC_TO_MATCH 5
-#define NSAMPLES (SR * SEC_TO_RECORD)
+#define NRECSAMPLES (SR * (SEC_TO_RECORD + 1))
 
 #define SEC_PER_KEY 0.011609977324263039
 
 struct amatch_context;
 
 const char* amatch_version();
+int nrecsamples();
+
 amatch_context* get_amatch_context();
 //bool init_amatch_context();
 //void destroy_amatch_context();

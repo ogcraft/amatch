@@ -457,6 +457,19 @@ int android_AudioInLast(OPENSL_STREAM *p,float *buffer,int size){
   if(p->outchannels == 0) p->time += (double) size/(p->sr*p->inchannels);
   return size;
 }
+
+int collect_AudioIn(OPENSL_STREAM *p, boost::circular_buffer<float>& buff){
+  if(p == NULL) return 0;
+  ringbuffer::iterator it = p->inrb->begin();
+  for( ; it != p->inrb->end(); ++it) {
+	float v = (float) (*it)*CONVMYFLT;
+    buff.push_back(v);
+  }
+  int size = p->inrb->size() / sizeof(short);
+  if(p->outchannels == 0) p->time += (double) size/(p->sr*p->inchannels);
+  return buff.size();
+}
+
 // this callback handler is called every time a buffer finishes playing
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {

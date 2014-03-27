@@ -99,6 +99,7 @@ typedef struct opensl_stream {
   Read a buffer from the OpenSL stream *p, of size samples from the end of buffer. Returns the number of samples read.
   */
   int android_AudioInLast(OPENSL_STREAM *p,float *buffer,int size);
+  int collect_AudioIn(OPENSL_STREAM *p, boost::circular_buffer<float>& buffer);
   /*
   Write a buffer to the OpenSL stream *p, of size samples. Returns the number of samples written.
   */
