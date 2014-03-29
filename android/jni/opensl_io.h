@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <SLES/OpenSLES_Android.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <boost/circular_buffer.hpp>
 
 typedef struct threadLock_{
   pthread_mutex_t m;
@@ -112,7 +113,27 @@ typedef struct opensl_stream {
   /*
   Get the current IO block time in seconds
   */
-  
+  //double android_GetTimestamp(OPENSL_STREAM *p);
+  //double android_GetTimestamp(OPENSL_STREAM *p);
+
+  int collect_AudioIn(OPENSL_STREAM *p, boost::circular_buffer<float>& buff);
+  /** Recording states */
+  //#define SL_RECORDSTATE_STOPPED 	((SLuint32) 0x00000001)
+  //#define SL_RECORDSTATE_PAUSED	((SLuint32) 0x00000002)
+  //#define SL_RECORDSTATE_RECORDING	((SLuint32) 0x00000003)
+  // Open the OpenSL ES device for input
+
+  SLresult setRecorderState(OPENSL_STREAM *p, SLuint32 st);
+
+  /** Playback states */
+  //#define SL_PLAYSTATE_STOPPED	((SLuint32) 0x00000001)
+  //#define SL_PLAYSTATE_PAUSED	((SLuint32) 0x00000002)
+  //#define SL_PLAYSTATE_PLAYING	((SLuint32) 0x00000003)
+
+  SLresult setPlayerState(OPENSL_STREAM *p, SLuint32 st);
+  SLresult getPlayState(OPENSL_STREAM *p);
+  SLresult getRecorderState(OPENSL_STREAM *p);
+
 #ifdef __cplusplus
 };
 #endif

@@ -4,6 +4,7 @@ SWIG interface file to amatch functions
 */
 
 %module amatch_interface
+%include "arrays_java.i";
 %{
 #include "amatch_interface.h"
 %}

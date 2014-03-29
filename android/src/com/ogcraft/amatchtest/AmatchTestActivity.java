@@ -61,6 +61,7 @@ public class AmatchTestActivity extends Activity {
     /** Called when the activity is first created. */
 	private static final String TAG = "Amatch";
 	private boolean isEngineInitialized = false;
+	private boolean isRecordedEnough = false;
 	private String data_root_path = "";
 	private String track_keys_fn = data_root_path;
 	private String translation_fn = data_root_path;
@@ -110,6 +111,7 @@ public class AmatchTestActivity extends Activity {
                 	play_translation(translation_fn, found_sec);
 				} else {
 					v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
+					play_recorded();
 				}
 			}
 		}; 
@@ -253,8 +255,11 @@ public class AmatchTestActivity extends Activity {
 	        public void run() {     	
 	        	Log.d(TAG,"Start searching");
 	        	recording_start_ms = System.currentTimeMillis();
-	        	int found_index = 85 * 2 * 60; //match_sample();
+	        	int found_index = 0; //85 * 2 * 60; //match_sample();
 	        	//int found_index = match_sample();
+	        	//String fn = data_root_path + "/recorded.wav";
+	        	//amatch_interface.write_recorded_as_file(fn);
+	        	//Log.d(TAG,"Written file: " + fn);
 	        	long index_found_ms = System.currentTimeMillis();
 	        	long time_to_match_ms = index_found_ms - recording_start_ms; 
 	        	Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
@@ -293,6 +298,7 @@ public class AmatchTestActivity extends Activity {
 	        		while(!Thread.currentThread().isInterrupted()){
 		        	      int n = amatch_interface.recording();
 		        	      if(n >= nmax) {
+		        	    	  isRecordedEnough = true;
 		        	    	  Log.d(TAG,"Recording thread: samples:" + n);
 		        	    	  Thread.sleep(1000);  
 		        	      }
@@ -310,22 +316,54 @@ public class AmatchTestActivity extends Activity {
     private int match_sample()
     {
     	
-		//if(!amatch_interface.open_audio_device()) {
-    	//	Log.e(TAG,"Failed to open audio_device");
-    	//	return 0;
-		//}
-    	amatch_interface.start_recording();
-    	Log.d(TAG,"Skip 25 frames...");
-    	amatch_interface.skip_samples(25);
-
-       	Log.d(TAG,"START RECORDING...");			
+    	Log.d(TAG,"Start match_samples()");
+    	while(!isRecordedEnough) {
+    		try {
+    			Thread.sleep(1000);
+    		} catch (InterruptedException x) {
+                return 0;
+             }
+    	}
+       	Log.d(TAG,"START MATCHING...");			
        	amatch_interface.generate_fp_keys_from_in();
     	int found_index = amatch_interface.match_sample();
-    	
-    	//amatch_interface.close_audo_device();
-    	
-		return found_index;
+ 		return found_index;
     
+    }
+    
+    public void  play_recorded(){
+    	Log.d(TAG,"Play recorded");
+    	//try
+        //{
+    		int sz = amatch_interface.get_recorded_samples_size();
+    		Log.d(TAG,"sz: " + sz);
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 11025, 
+            		AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 4096, AudioTrack.MODE_STREAM);
+            
+            audioTrack.play();
+        	
+        	float recs[] = new float[sz];
+        	
+        	amatch_interface.get_recorded_samples(recs);
+        	
+        	short samples[] = new short[sz];
+        	Log.d(TAG, "-----------------\n");
+        	for( int i = 0; i < sz; i++ ) {
+        		
+        		if(i<100 ) Log.d(TAG, "recs: " + recs[i]);
+        	    samples[i] = (short)(recs[i]*Short.MAX_VALUE);
+        	}
+
+            audioTrack.write(samples, 0, sz);
+            
+            audioTrack.stop();
+            audioTrack.release();
+        //}
+        //catch (IOException e)
+        //{
+           
+        //}
+
     }
     public void  play_translation(String fn, double from_sec){
         // Play translation

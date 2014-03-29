@@ -5,15 +5,17 @@ amatch_interface.c:
 #include <jni.h>
 #include <stdio.h>
 #include <sndfile.h>
+#include <sndfile.hh>
 #include <sys/time.h> 
 #include <assert.h> 
 #include <algorithm>
 
+#include <boost/circular_buffer.hpp>
 #include "amatch.h"
 #include "utils.h"
 #include "amatch_interface.h"
 #include <android/log.h>
-#include "opensl_io4.h"
+#include "opensl_io.h"
 
 #include "logging.h"
 
@@ -47,6 +49,26 @@ amatch_context::amatch_context()
 	:p(NULL),track_keys(),rec_keys(),record_buffer(NRECSAMPLES)
 {
 
+}
+
+key_vector& recorded_keys()
+{
+	return _ctx.rec_keys;
+}
+
+boost::circular_buffer<float>& get_record_buffer()
+{
+	return _ctx.record_buffer;
+}
+
+void get_recorded_samples(float p[])
+{
+	std::copy(_ctx.record_buffer.begin(), _ctx.record_buffer.end(), p);
+}
+
+int get_recorded_samples_size()
+{
+	return _ctx.record_buffer.size();
 }
 
 amatch_context* get_amatch_context()
@@ -107,7 +129,7 @@ void close_audo_device()
 
 int read_audio_in(float inbuffer[], size_t nsamples)
 {
-	int samps = android_AudioInLast(_ctx.p, inbuffer, nsamples);
+	int samps = android_AudioIn(_ctx.p, inbuffer, nsamples);
 	return samps;
 }
 
@@ -145,11 +167,11 @@ int recording1()
 
 int generate_fp_keys_from_in()
 {
-	LOGD(TAG,"generate_fp_keys_from_in()");
-	return 0;
-	size_t samps_collected = 0;
+	LOGD(TAG,"generate_fp_keys_from_in() from %d samples", _ctx.record_buffer.size());
+	size_t samps_to_match = _ctx.record_buffer.size();
+	_ctx.rec_keys.clear();
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
-	//fpkeys_from_samples(_ctx.record_buffer, samps_collected, SR, _ctx.rec_keys);
+	fpkeys_from_samples(_ctx.record_buffer.linearize(), samps_to_match, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
 	return _ctx.rec_keys.size();
 }
@@ -159,7 +181,8 @@ int match_sample()
 	LOGD(TAG,"match_sample()");
 	double nsecs_to_match = 5.0;
 	double start_sec_of_track = 0.1;
-	double end_sec_of_track = 0.1;
+	//double end_sec_of_track = 0.1;
+	double end_sec_of_track = 20.0 * 60;
 	size_t sample_size_keys = _ctx.rec_keys.size();
 	double sample_size_secs = sample_size_keys * sec_per_sample;
 	size_t nrecords = _ctx.track_keys.size();
@@ -208,6 +231,41 @@ int recorder_state()
 	return getRecorderState(_ctx.p);
 }
 
+
+
+void create_file (const char * fname, const float* data, int size)
+{	
+	SNDFILE	*file ;
+	SF_INFO	sfinfo ;
+
+	LOGD(TAG,"Creating file named '%s' data size: %d\n", fname, size) ;
+	memset (&sfinfo, 0, sizeof (sfinfo)) ;
+
+
+	sfinfo.samplerate	= SR ;
+	sfinfo.frames		= size ;
+	sfinfo.channels		= 1 ;
+	sfinfo.format		= (SF_FORMAT_WAV | SF_FORMAT_PCM_16) ;
+	LOGD(TAG,"Open file %s\n", fname);
+
+	if (! (file = sf_open(fname, SFM_WRITE, &sfinfo))) {
+		LOGD(TAG,"Error : Not able to open output file.\n") ;
+			return;
+	}
+
+	if( sf_write_float(file, data, (sf_count_t) sfinfo.frames ) != sfinfo.frames ) {
+		LOGD(TAG, "Write error: %s\n", sf_strerror (file)) ;
+	}
+	LOGD(TAG, "Succesfully writen %s\n", fname);
+	sf_close (file) ;
+	return;
+}
+
+void write_recorded_as_file (const char * fname)
+{
+	LOGD(TAG,"write_recorded_as_file(): %s\n", fname);
+	create_file (fname, _ctx.record_buffer.linearize(), _ctx.record_buffer.size());
+}
 
 #if 0
 static int on;

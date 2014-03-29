@@ -121,7 +121,7 @@ size_t read_keys_from_file(const std::string& filename, key_vector& keys)
 	}
 
 	if(keys.size() != len) {
-		printf("Read wrong number of keys: %lu != %d\n",keys.size(), len); 
+		printf("Read wrong number of keys: %d != %d\n",(int)keys.size(), len); 
 	}
 
     return len; 
@@ -143,7 +143,7 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
 
     diff_vector1 diffs(nrecords, std::make_pair(33,0));
     size_t max_i =  (nrecords-(nsec+1) * keys_in_sec);
-    printf("nrecords: %lu nsamples:%lu max_i: %lu\n", nrecords, nsamples, max_i);
+    printf("nrecords: %d nsamples:%d max_i: %d\n", (int)nrecords, (int)nsamples, (int)max_i);
     size_t i = 0;
     for(; i < max_i; i++ ) {
         int d = calc_dist(i, record_keys, sample_keys, sample_key_start, nsec, 0);

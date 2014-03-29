@@ -46,6 +46,10 @@ void pause_recording();
 int player_state();
 int recorder_state();
 
+void get_recorded_samples(float p[]);
+int get_recorded_samples_size();
+
+void write_recorded_as_file (const char * fname);
 
 #ifdef __cplusplus
 };
