@@ -175,7 +175,7 @@ public class AmatchTestActivity extends Activity {
     	super.onDestroy();
     	Log.d(TAG, "onDestroy(): Stop recording.");
     	amatch_interface.stop_recording();
-    	amatch_interface.close_audo_device();
+    	//amatch_interface.close_audo_device();
     	recorder_thread.interrupt();
     	isEngineInitialized = false;
     	mp.stop();
@@ -274,8 +274,30 @@ public class AmatchTestActivity extends Activity {
       match_thread  = new Thread(runnable);
   	  match_thread.start();
     }
-    
+
     public void start_recording_thread()
+    {   
+        isEngineInitialized = true;
+        Runnable runnable = new Runnable() {
+            public void run() {         
+                Log.d(TAG,"Start recording thread");
+                
+                recording_start_ms = System.currentTimeMillis();
+                Log.d(TAG,"Recorder state: " + amatch_interface.recorder_state());
+                try {
+                    
+                 }
+                 catch (InterruptedException x) {
+                    return;
+                 }
+            }
+      };
+      recorder_thread  = new Thread(runnable);
+      recorder_thread.start();
+    }
+
+    
+    public void start_recording_thread1()
     {	
     	if(!isEngineInitialized) {
     		if(!amatch_interface.open_audio_device()) {
@@ -286,7 +308,6 @@ public class AmatchTestActivity extends Activity {
     			isEngineInitialized = true;
     		}
     	}
- 
     	Runnable runnable = new Runnable() {
 	        public void run() {     	
 	        	Log.d(TAG,"Start recording thread");
