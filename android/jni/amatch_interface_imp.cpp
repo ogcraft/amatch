@@ -15,7 +15,7 @@ amatch_interface.c:
 #include "utils.h"
 #include "amatch_interface.h"
 #include <android/log.h>
-#include "opensl_io.h"
+#include "opensl_io4.h"
 
 #include "logging.h"
 
