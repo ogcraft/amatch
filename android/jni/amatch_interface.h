@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.14"
+#define AMATCH_VER "1.20a"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
@@ -47,6 +47,7 @@ int player_state();
 int recorder_state();
 
 void get_recorded_samples(float p[]);
+void put_recorded_samples(short p[], int size);
 int get_recorded_samples_size();
 
 void write_recorded_as_file (const char * fname);

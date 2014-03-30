@@ -21,6 +21,9 @@ amatch_interface.c:
 
 const char* TAG = "Amatch";
 
+#define CONV16BIT 32768
+#define CONVMYFLT (1./32768.)
+
 const char* amatch_version()
 {
 	return AMATCH_VER;
@@ -64,6 +67,14 @@ boost::circular_buffer<float>& get_record_buffer()
 void get_recorded_samples(float p[])
 {
 	std::copy(_ctx.record_buffer.begin(), _ctx.record_buffer.end(), p);
+}
+
+void put_recorded_samples(short p[], int size)
+{
+	for(int i = 0; i < size; i++) {
+		float f = ((float) p[i]) * CONVMYFLT;
+		_ctx.record_buffer.push_back(f);
+	}
 }
 
 int get_recorded_samples_size()
@@ -266,26 +277,3 @@ void write_recorded_as_file (const char * fname)
 	LOGD(TAG,"write_recorded_as_file(): %s\n", fname);
 	create_file (fname, _ctx.record_buffer.linearize(), _ctx.record_buffer.size());
 }
-
-#if 0
-static int on;
-void start_process() {
-  OPENSL_STREAM  *p;
-  int samps, i, j;
-  float  inbuffer[VECSAMPS_MONO], outbuffer[VECSAMPS_STEREO];
-  p = android_OpenAudioDevice(SR,1,2,BUFFERFRAMES);
-  if(p == NULL) return; 
-  on = 1;
-  while(on) {
-   samps = android_AudioIn(p,inbuffer,VECSAMPS_MONO);
-   for(i = 0, j=0; i < samps; i++, j+=2)
-     outbuffer[j] = outbuffer[j+1] = inbuffer[i];
-   android_AudioOut(p,outbuffer,samps*2); 
-  }  
-  android_CloseAudioDevice(p);
-}
-
-void stop_process(){
-  on = 0;
-}
-#endif

@@ -20,11 +20,14 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.media.AudioRecord;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.MediaRecorder.AudioSource;
+import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -38,7 +41,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -71,16 +76,17 @@ public class AmatchTestActivity extends Activity {
 	private double finalTime_ms = 0;
 	private long recording_start_ms = 0;
 	private long recording_end_ms = 0;
+	private int updateMs = 150;
 	int file_selecting_button_id = R.id.btn_load_fpkeys;
 	// Media Player
     private  MediaPlayer mp;
     private SeekBar seekbar;
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
-	Thread load_fpkeys_thread;
-	Thread match_thread;
-	Thread player_thread;
-	Thread recorder_thread;
+	private Thread load_fpkeys_thread;
+	private Thread match_thread;
+	private Thread player_thread;
+	private Looper recorder_thread;
 	
 	Handler load_fpkeys_thread_handler = new Handler() {
 		@Override
@@ -176,7 +182,8 @@ public class AmatchTestActivity extends Activity {
     	Log.d(TAG, "onDestroy(): Stop recording.");
     	amatch_interface.stop_recording();
     	//amatch_interface.close_audo_device();
-    	recorder_thread.interrupt();
+    	//recorder_thread.interrupt();
+    	recorder_thread.finish();
     	isEngineInitialized = false;
     	mp.stop();
     	load_fpkeys_thread = null;
@@ -243,7 +250,7 @@ public class AmatchTestActivity extends Activity {
     {
 		mp.stop();
 	}
-    
+   
     public void btn_start_searchClick(View view)
     {
     	TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
@@ -278,25 +285,12 @@ public class AmatchTestActivity extends Activity {
     public void start_recording_thread()
     {   
         isEngineInitialized = true;
-        Runnable runnable = new Runnable() {
-            public void run() {         
-                Log.d(TAG,"Start recording thread");
-                
-                recording_start_ms = System.currentTimeMillis();
-                Log.d(TAG,"Recorder state: " + amatch_interface.recorder_state());
-                try {
-                    
-                 }
-                 catch (InterruptedException x) {
-                    return;
-                 }
-            }
-      };
-      recorder_thread  = new Thread(runnable);
-      recorder_thread.start();
+        recorder_thread = new Looper();
+        recorder_thread.start();
+      
     }
 
-    
+/*    
     public void start_recording_thread1()
     {	
     	if(!isEngineInitialized) {
@@ -333,7 +327,7 @@ public class AmatchTestActivity extends Activity {
       recorder_thread  = new Thread(runnable);
   	  recorder_thread.start();
     }
-    
+ */   
     private int match_sample()
     {
     	
@@ -434,4 +428,59 @@ public class AmatchTestActivity extends Activity {
            seekbar_handler.postDelayed(this, 100);
         }
      };
+     
+     public class Looper extends Thread {
+    	    AudioRecord record;
+    	    int SR = 11025;
+    	    int minBytes;
+    	    //int bytesToRecord = SR * 20;
+    	    long baseTimeMs;
+    	    boolean isRunning = true;
+    	    boolean isPaused1 = false;
+    	    // Choose 2 arbitrary test frequencies to verify FFT operation
+    	    
+    	   short[] recorded_samples; 
+
+    	    public Looper() {
+    	    	recorded_samples = new short[SR*20+1];
+    	      minBytes = AudioRecord.getMinBufferSize(11025 /*sampleRate*/, 
+    	    		  AudioFormat.CHANNEL_IN_MONO,
+    	    		  AudioFormat.ENCODING_PCM_16BIT);
+    	      Log.d(TAG, " Recomended min buffer: " + minBytes); 
+    	      record =  new AudioRecord( AudioSource.MIC,SR,
+    	          AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,  minBytes);
+    	      Log.d(TAG, "Buffer size: " + minBytes + " (" + record.getSampleRate() + "=" + SR + ")");
+    	    }
+
+    	    @Override
+    	    public void run() {
+    	      short[] audioSamples = new short[minBytes];
+    	      Log.d(TAG,"Start recording by AudioTrack");
+    	      record.startRecording();
+    	      //  try {
+    	      short offset = 0;
+	          while(!Thread.currentThread().isInterrupted()){
+	           	   int b = record.read(audioSamples,0, minBytes);
+	           	   System.arraycopy(audioSamples, 0, recorded_samples, offset, b);
+	           	   offset += b;
+	           	   if(offset >= 20*SR) {
+	           		   amatch_interface.put_recorded_samples(audioSamples, offset);
+	           		   offset=0;
+	           	   }
+	           }
+	         //    }
+	         //    catch (InterruptedException x) {
+	         //       return;
+	          //   }
+    	      Log.i(TAG, "Releasing Audio");
+    	      record.stop();
+    	      record.release();
+    	      record = null;
+    	    }
+    	    public void finish() {
+    	      isRunning=false;
+    	      interrupt();
+    	    }
+    	  }
+
 }
