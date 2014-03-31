@@ -199,14 +199,16 @@ int generate_fp_keys_from_in()
 		
 int match_sample()
 {
-	LOGD(TAG,"match_sample()");
-	double nsecs_to_match = 5.0;
+	
+	double nsecs_to_match = 10.0;
 	double start_sec_of_track = 0.1;
 	//double end_sec_of_track = 0.1;
 	double end_sec_of_track = 20.0 * 60;
 	size_t sample_size_keys = _ctx.rec_keys.size();
 	double sample_size_secs = sample_size_keys * sec_per_sample;
 	size_t nrecords = _ctx.track_keys.size();
+	LOGD(TAG,"match_sample() rec_keys: %d nrecords:%d\n", sample_size_keys, nrecords);
+
 	end_sec_of_track = (nrecords - sample_size_keys +1) * sec_per_sample;
 
 	int found_index = match_single_sample(_ctx.track_keys, _ctx.rec_keys,

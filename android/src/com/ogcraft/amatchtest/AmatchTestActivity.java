@@ -110,8 +110,9 @@ public class AmatchTestActivity extends Activity {
                 recording_end_ms = System.currentTimeMillis();
 
                 found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
+                Log.d(TAG,"found_sec: " + found_sec);
                 // add delay from algorithm
-                found_sec = amatch_interface.delay_per_sec() * found_sec;
+                found_sec = (amatch_interface.delay_per_sec()+1) * found_sec;
 
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
@@ -121,7 +122,7 @@ public class AmatchTestActivity extends Activity {
                     play_translation(translation_fn, found_sec);
                 } else {
                     v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
-                    play_recorded();
+                    //play_recorded();
                 }
             }
         }; 
@@ -333,13 +334,13 @@ public class AmatchTestActivity extends Activity {
     {
         
         Log.d(TAG,"Start match_samples()");
-        while(!isRecordedEnough) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException x) {
-                return 0;
-             }
-        }
+        //while(!isRecordedEnough) {
+        //    try {
+        //        Thread.sleep(1000);
+        //    } catch (InterruptedException x) {
+        //        return 0;
+        //     }
+        //}
         Log.d(TAG,"START MATCHING...");         
         amatch_interface.generate_fp_keys_from_in();
         int found_index = amatch_interface.match_sample();
@@ -382,14 +383,18 @@ public class AmatchTestActivity extends Activity {
     public void  play_translation(String fn, double from_sec){
         // Play translation
         try {
+            long start_prepare_ms = System.currentTimeMillis();
             mp.reset();
             mp.setDataSource(fn);
             mp.prepare();
-            
-            Log.d(TAG,"play_translation from sec: " + from_sec*1000);
+            long end_prepare_ms = System.currentTimeMillis();
+            long prepare_ms = end_prepare_ms - start_prepare_ms;
+            Log.d(TAG,"play_translation from sec: " + from_sec*1000 + " prepare_ms: " + prepare_ms);
             // Move song to particular second
-            mp.seekTo((int)(from_sec*1000)); // position in milliseconds
-             
+            mp.seekTo((int)(from_sec*1000 + prepare_ms)); // position in milliseconds
+            long seek_time_ms = System.currentTimeMillis() - end_prepare_ms;
+            Log.d(TAG,"play_translation seek time: " + seek_time_ms);
+            // Move song to particular second 
             mp.start();
             
             finalTime_ms = mp.getDuration();
