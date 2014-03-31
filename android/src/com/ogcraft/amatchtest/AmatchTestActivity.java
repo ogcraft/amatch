@@ -108,7 +108,11 @@ public class AmatchTestActivity extends Activity {
                 long time_to_match_ms = bundle.getLong("time_to_match_ms");
                 Log.d(TAG,"FoundIndex: n = " + i);
                 recording_end_ms = System.currentTimeMillis();
+
                 found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
+                // add delay from algorithm
+                found_sec = amatch_interface.delay_per_sec() * found_sec;
+
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
                 double search_time_ms = recording_end_ms - recording_start_ms;
@@ -262,11 +266,8 @@ public class AmatchTestActivity extends Activity {
             public void run() {         
                 Log.d(TAG,"Start searching");
                 recording_start_ms = System.currentTimeMillis();
-                int found_index = 0; //85 * 2 * 60; //match_sample();
-                //int found_index = match_sample();
-                //String fn = data_root_path + "/recorded.wav";
-                //amatch_interface.write_recorded_as_file(fn);
-                //Log.d(TAG,"Written file: " + fn);
+                //int found_index = 85 * 4000; //match_sample();
+                int found_index = match_sample();
                 long index_found_ms = System.currentTimeMillis();
                 long time_to_match_ms = index_found_ms - recording_start_ms; 
                 Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
@@ -352,7 +353,7 @@ public class AmatchTestActivity extends Activity {
         //{
             int sz = amatch_interface.get_recorded_samples_size();
             Log.d(TAG,"sz: " + sz);
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 11025, 
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, amatch_interface.get_sample_rate(), 
                     AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 4096, AudioTrack.MODE_STREAM);
             
             audioTrack.play();
@@ -429,7 +430,7 @@ public class AmatchTestActivity extends Activity {
      
      public class Looper extends Thread {
             AudioRecord record;
-            int SR = 11025;
+            int SR = amatch_interface.get_sample_rate();
             int minBytes;
             //int bytesToRecord = SR * 20;
             long baseTimeMs;
@@ -457,11 +458,11 @@ public class AmatchTestActivity extends Activity {
               record.startRecording();
 
               short offset = 0;
-              while(!Thread.currentThread().isInterrupted()){
+            while(!Thread.currentThread().isInterrupted()){
                  int b = record.read(audioSamples,0, minBytes);
                  amatch_interface.put_recorded_samples(audioSamples, b);
              }
-
+             isRecordedEnough = true;
              Log.i(TAG, "Releasing Audio");
              record.stop();
              record.release();

@@ -845,7 +845,7 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1V
   
   (void)jenv;
   (void)jcls;
-  result = (char *)("1.20a");
+  result = (char *)("1.20c");
   if (result) jresult = jenv->NewStringUTF((const char *)result);
   return jresult;
 }
@@ -923,6 +923,18 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_NRECSAMPLES_
 }
 
 
+SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_DELAY_1PER_1SEC_1get(JNIEnv *jenv, jclass jcls) {
+  jdouble jresult = 0 ;
+  double result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (double)(0.00255126);
+  jresult = (jdouble)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1PER_1KEY_1get(JNIEnv *jenv, jclass jcls) {
   jdouble jresult = 0 ;
   double result;
@@ -959,14 +971,26 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_nrecsamples(
 }
 
 
-SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1amatch_1context(JNIEnv *jenv, jclass jcls) {
-  jlong jresult = 0 ;
-  amatch_context *result = 0 ;
+SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1sample_1rate(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
   
   (void)jenv;
   (void)jcls;
-  result = (amatch_context *)get_amatch_context();
-  *(amatch_context **)&jresult = result; 
+  result = (int)get_sample_rate();
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_delay_1per_1sec(JNIEnv *jenv, jclass jcls) {
+  jdouble jresult = 0 ;
+  double result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (double)delay_per_sec();
+  jresult = (jdouble)result; 
   return jresult;
 }
 

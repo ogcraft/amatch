@@ -35,6 +35,16 @@ int nrecsamples()
 	return NRECSAMPLES;
 }
 
+int get_sample_rate()
+{
+	return SR;
+}
+
+double delay_per_sec()
+{
+	return (double)DELAY_PER_SEC;
+}
+
 struct amatch_context
 {
 	
