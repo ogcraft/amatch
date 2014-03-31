@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.20a"
+#define AMATCH_VER "1.20b"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
