@@ -200,10 +200,10 @@ int generate_fp_keys_from_in()
 int match_sample()
 {
 	
-	double nsecs_to_match = 10.0;
+	double nsecs_to_match = SEC_TO_MATCH;
 	double start_sec_of_track = 0.1;
 	//double end_sec_of_track = 0.1;
-	double end_sec_of_track = 20.0 * 60;
+	double end_sec_of_track = SEC_TO_RECORD * 60;
 	size_t sample_size_keys = _ctx.rec_keys.size();
 	double sample_size_secs = sample_size_keys * sec_per_sample;
 	size_t nrecords = _ctx.track_keys.size();

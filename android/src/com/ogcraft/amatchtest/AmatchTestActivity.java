@@ -6,6 +6,9 @@ All rights reserved.
 
 package com.ogcraft.amatchtest;
 import amatch_generated.amatch_interface;
+import com.lamerman.FileDialog;
+import com.lamerman.SelectionMode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -13,16 +16,19 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder; 
 import java.nio.FloatBuffer; 
 import java.util.concurrent.TimeUnit;
-
-import com.lamerman.FileDialog;
-import com.lamerman.SelectionMode;
+import android.os.PowerManager; 
+import android.util.Log; 
+import android.widget.Toast; 
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.media.AudioRecord;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnCompletionListener; 
+import android.media.MediaPlayer.OnErrorListener; 
+import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.OnSeekCompleteListener;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -62,24 +68,32 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class AmatchTestActivity extends Activity {
+public class AmatchTestActivity 
+    extends Activity 
+    implements  OnPreparedListener, OnSeekCompleteListener, OnErrorListener
+{
     /** Called when the activity is first created. */
     private static final String TAG = "Amatch";
     private boolean isEngineInitialized = false;
     private boolean isRecordedEnough = false;
+    private boolean isMediaPlayerReady = false;
     private String data_root_path = "";
     private String track_keys_fn = data_root_path;
     private String translation_fn = data_root_path;
     private static double SEC_PER_KEY = 0.011609977324263039;
     private double found_sec = 0;
-    private double currentPlayingTime_ms = 0;
-    private double finalTime_ms = 0;
+    private int currentPlayingTime_ms = 0;
+    private int finalTime_ms = 0;
     private long recording_start_ms = 0;
     private long recording_end_ms = 0;
+    private long seek_start_ms = 0;
+    private long seek_end_ms = 0;
+    private long prepare_start_ms = 0;
+    private long prepare_end_ms = 0;
     private int updateMs = 150;
     int file_selecting_button_id = R.id.btn_load_fpkeys;
     // Media Player
-    private  MediaPlayer mp;
+    private  MediaPlayer mp = null;
     private SeekBar seekbar;
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
@@ -117,9 +131,10 @@ public class AmatchTestActivity extends Activity {
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
                 double search_time_ms = recording_end_ms - recording_start_ms;
+                Log.d(TAG,"search_time_ms: " + search_time_ms);
                 if(i > 10) {
                     v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
-                    play_translation(translation_fn, found_sec);
+                    play_translation(translation_fn, (long) found_sec*1000);
                 } else {
                     v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
                     //play_recorded();
@@ -134,8 +149,9 @@ public class AmatchTestActivity extends Activity {
         File f = Environment.getExternalStorageDirectory();
         data_root_path = f.getAbsolutePath();
         Log.d(TAG,"In onCreate()");
-        mp = new MediaPlayer();
-       
+        
+
+        
         seekbar = (SeekBar)findViewById(R.id.seekbar);
         seekbar.setClickable(false);
         progress_display_view = (TextView)findViewById(R.id.progress_display);
@@ -191,6 +207,7 @@ public class AmatchTestActivity extends Activity {
         recorder_thread.finish();
         isEngineInitialized = false;
         mp.stop();
+        isMediaPlayerReady = false;
         load_fpkeys_thread = null;
         
     }
@@ -218,6 +235,7 @@ public class AmatchTestActivity extends Activity {
                         translation_fn = filename;
                         Log.d(TAG, "translation_fn: " + translation_fn);
                         b.setText("Translation: " + translation_fn.substring(data_root_path.length()+1));
+                        createMediaPlayerForTranslation(translation_fn);
                     }
                     break;
                 case SAVE:
@@ -258,17 +276,22 @@ public class AmatchTestActivity extends Activity {
    
     public void btn_start_searchClick(View view)
     {
+        if(!isMediaPlayerReady)
+        {
+            Log.d(TAG,"btn_start_searchClick(): MediaPlayer still not Ready.");
+            return;
+        }
         TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
         v.setEnabled(false);
         TextView v1 = (TextView)findViewById(R.id.found_display);
         v1.setText("Please wait. Synchronizing...");
-        mp.stop();
+        
         Runnable runnable = new Runnable() {
             public void run() {         
                 Log.d(TAG,"Start searching");
                 recording_start_ms = System.currentTimeMillis();
-                //int found_index = 85 * 4000; //match_sample();
-                int found_index = match_sample();
+                int found_index = 86 * 4000; //match_sample();
+                //int found_index = match_sample();
                 long index_found_ms = System.currentTimeMillis();
                 long time_to_match_ms = index_found_ms - recording_start_ms; 
                 Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
@@ -380,32 +403,38 @@ public class AmatchTestActivity extends Activity {
         //}
 
     }
-    public void  play_translation(String fn, double from_sec){
-        // Play translation
+
+    void  createMediaPlayerForTranslation(String translation_fn) { 
+        if(translation_fn.length() <= data_root_path.length()+ 3)
+        {
+            Log.d(TAG,String.format("Translation filename: %s is not correct!",translation_fn));
+            return;
+        }
+        if (mp == null) { 
+            mp = new  MediaPlayer(); 
+ 
+            // Make sure the media player will acquire a wake-lock while playing. If we don't do
+            // that, the CPU might go to sleep while the song is playing, causing playback to stop.
+            //
+            // Remember that to use this, we have to declare the android.permission.WAKE_LOCK
+            // permission in AndroidManifest.xml.
+            mp.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK); 
+ 
+            // we want the media player to notify us when it's ready preparing, and when it's done
+            // playing:
+            mp.setOnPreparedListener(this); 
+            mp.setOnSeekCompleteListener(this);
+            mp.setOnErrorListener(this); 
+        } 
+        else  
+        {
+            isMediaPlayerReady = false;
+            mp.reset(); 
+        }
+        prepare_start_ms = System.currentTimeMillis();
+        mp.reset();
         try {
-            long start_prepare_ms = System.currentTimeMillis();
-            mp.reset();
-            mp.setDataSource(fn);
-            mp.prepare();
-            long end_prepare_ms = System.currentTimeMillis();
-            long prepare_ms = end_prepare_ms - start_prepare_ms;
-            Log.d(TAG,"play_translation from sec: " + from_sec*1000 + " prepare_ms: " + prepare_ms);
-            // Move song to particular second
-            mp.seekTo((int)(from_sec*1000 + prepare_ms)); // position in milliseconds
-            long seek_time_ms = System.currentTimeMillis() - end_prepare_ms;
-            Log.d(TAG,"play_translation seek time: " + seek_time_ms);
-            // Move song to particular second 
-            mp.start();
-            
-            finalTime_ms = mp.getDuration();
-            Log.d(TAG,"play_translation finalTime_ms: " + (finalTime_ms / 1000.0));
-            Log.d(TAG,"seekbar: " + seekbar);
-            seekbar.setMax((int)finalTime_ms);
-            long t = mp.getCurrentPosition();
-            Log.d(TAG, "play_translation(): t: " + (t / 1000.0));
-            seekbar.setProgress((int)t);
-            seekbar_handler.postDelayed(UpdateTranslationTime,100);
-          
+            mp.setDataSource(translation_fn);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         } catch (IllegalStateException e) {
@@ -413,7 +442,64 @@ public class AmatchTestActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // Until the media player is prepared, we *cannot* call start() on it!
+        mp.prepareAsync(); 
+        
+    } 
+    /** Called when media player is done preparing. */
+    @Override
+    public  void  onPrepared(MediaPlayer player) { 
+        isMediaPlayerReady = true;
+        // The media player is done preparing. That means we can start playing!
+        prepare_end_ms = System.currentTimeMillis();
+        Log.d(TAG, String.format("onPrepared(): prepare took: %d ms", prepare_end_ms - prepare_start_ms));
+        finalTime_ms = mp.getDuration();
+        Log.d(TAG,String.format("onPrepared(): Max Duration: ",finalTime_ms));
+    } 
+
+    @Override
+    public boolean onError(MediaPlayer mediaPlayer, int i, int i2) {
+        return false;    // Error -38 lol
     }
+
+    @Override
+    public void onSeekComplete(MediaPlayer mp) {
+        seek_end_ms = System.currentTimeMillis();
+        Log.d(TAG, String.format("onSeekComplete() seek to: %d took: %d ms", 
+            mp.getCurrentPosition(), seek_end_ms - seek_start_ms));
+        Log.d(TAG, String.format("From search_start_ms till seek_end ms: %d", seek_end_ms-recording_start_ms));
+        mp.start();
+        finalTime_ms = mp.getDuration();
+        Log.d(TAG,String.format("onSeekComplete() finalTime_ms: %d", finalTime_ms));
+        Log.d(TAG,"seekbar: " + seekbar);
+        seekbar.setMax((int)finalTime_ms);
+        long t = mp.getCurrentPosition();
+        Log.d(TAG, String.format("onSeekComplete(): curentPos: %d", t));
+        seekbar.setProgress((int)t);
+        seekbar_handler.postDelayed(UpdateTranslationTime,100);
+    }
+
+    public void  play_translation(String fn, long from_ms){
+        // Play translation
+        try {
+            Log.d(TAG,String.format("play_translation from %d ms", from_ms));
+            if(from_ms >= finalTime_ms)
+            {
+                Log.d(TAG, String.format("play_translation(), requested time %d is more than Max Duration: %d",
+                    from_ms, finalTime_ms));
+            }
+            seek_start_ms = System.currentTimeMillis();
+            Log.d(TAG, "play_translation(): Seeking to " + from_ms);
+            // Move song to particular second
+            mp.seekTo((int)from_ms); // position in milliseconds
+            //mp.start();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
     private Runnable UpdateTranslationTime = new Runnable() {
         public void run() {
            currentPlayingTime_ms = mp.getCurrentPosition();
@@ -432,7 +518,8 @@ public class AmatchTestActivity extends Activity {
            seekbar_handler.postDelayed(this, 100);
         }
      };
-     
+
+     //////////////////////////////////// Recorder Looper ////////////////////
      public class Looper extends Thread {
             AudioRecord record;
             int SR = amatch_interface.get_sample_rate();
