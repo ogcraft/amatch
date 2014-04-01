@@ -468,6 +468,7 @@ public class AmatchTestActivity
         Log.d(TAG, String.format("onSeekComplete() seek to: %d took: %d ms", 
             mp.getCurrentPosition(), seek_end_ms - seek_start_ms));
         Log.d(TAG, String.format("From search_start_ms till seek_end ms: %d", seek_end_ms-recording_start_ms));
+        //mp.setVolume(1.0f, 1.0f); // we can be loud 
         mp.start();
         finalTime_ms = mp.getDuration();
         Log.d(TAG,String.format("onSeekComplete() finalTime_ms: %d", finalTime_ms));
