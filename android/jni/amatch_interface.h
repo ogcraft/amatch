@@ -2,13 +2,13 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.20d"
+#define AMATCH_VER "1.21"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
 #define SEC_TO_RECORD 20.0
-#define SEC_TO_MATCH 10.0
-#define NRECSAMPLES (SR * (SEC_TO_RECORD + 1))
+#define SEC_TO_MATCH 7.0
+#define NRECSAMPLES (SR * (SEC_TO_RECORD))
 
 #define DELAY_PER_SEC 0.00255126
 
