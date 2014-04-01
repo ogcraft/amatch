@@ -35,6 +35,11 @@ int nrecsamples()
 	return NRECSAMPLES;
 }
 
+double num_sec_to_record()
+{
+	return (double) SEC_TO_RECORD;
+}
+
 int get_sample_rate()
 {
 	return SR;
@@ -203,7 +208,7 @@ int match_sample()
 	double nsecs_to_match = SEC_TO_MATCH;
 	double start_sec_of_track = 0.1;
 	//double end_sec_of_track = 0.1;
-	double end_sec_of_track = SEC_TO_RECORD * 60;
+	double end_sec_of_track = SEC_TO_RECORD * 3;
 	size_t sample_size_keys = _ctx.rec_keys.size();
 	double sample_size_secs = sample_size_keys * sec_per_sample;
 	size_t nrecords = _ctx.track_keys.size();

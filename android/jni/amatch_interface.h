@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.20e"
+#define AMATCH_VER "1.20d"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
@@ -18,6 +18,7 @@ struct amatch_context;
 
 const char* amatch_version();
 int nrecsamples();
+double num_sec_to_record();
 int get_sample_rate();
 double delay_per_sec();
 

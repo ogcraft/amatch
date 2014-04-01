@@ -126,13 +126,14 @@ public class AmatchTestActivity
                 found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
                 Log.d(TAG,"found_sec: " + found_sec);
                 // add delay from algorithm
-                found_sec = (amatch_interface.delay_per_sec()+1) * found_sec;
-
+                //found_sec = (amatch_interface.delay_per_sec()+1) * found_sec;
+                found_sec = found_sec + amatch_interface.num_sec_to_record();
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
                 double search_time_ms = recording_end_ms - recording_start_ms;
                 Log.d(TAG,"search_time_ms: " + search_time_ms);
-                if(i > 10) {
+                if( i > 10 && 
+                    (found_sec*1000 < finalTime_ms)) {
                     v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
                     play_translation(translation_fn, (long) found_sec*1000);
                 } else {
@@ -290,11 +291,11 @@ public class AmatchTestActivity
             public void run() {         
                 Log.d(TAG,"Start searching");
                 recording_start_ms = System.currentTimeMillis();
-                int found_index = 86 * 4000; //match_sample();
-                //int found_index = match_sample();
+                //int found_index = 86 * 4000; //match_sample();
+                int found_index = match_sample();
                 long index_found_ms = System.currentTimeMillis();
                 long time_to_match_ms = index_found_ms - recording_start_ms; 
-                Log.d(TAG,"fff: " + found_index + " ms took: " + time_to_match_ms);
+                Log.d(TAG,"found_index: " + found_index + " ms took: " + time_to_match_ms);
                 Message msg = player_thread_handler.obtainMessage();
                 Bundle bundle = new Bundle();
                 bundle.putInt("FoundIndex", found_index);
