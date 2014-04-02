@@ -196,9 +196,11 @@ int generate_fp_keys_from_in()
 	LOGD(TAG,"generate_fp_keys_from_in() from %d samples", _ctx.record_buffer.size());
 	size_t samps_to_match = _ctx.record_buffer.size();
 	_ctx.rec_keys.clear();
+
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
 	fpkeys_from_samples(_ctx.record_buffer.linearize(), samps_to_match, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
+	_ctx.record_buffer.clear();
 	return _ctx.rec_keys.size();
 }
 		
@@ -213,18 +215,20 @@ int match_sample()
 	double sample_size_secs = sample_size_keys * sec_per_sample;
 	size_t nrecords = _ctx.track_keys.size();
 	LOGD(TAG,"match_sample() rec_keys: %d nrecords:%d\n", sample_size_keys, nrecords);
-
+	if(_ctx.rec_keys.size()<10) {
+		return 0;
+	}
 	end_sec_of_track = (nrecords - sample_size_keys +1) * sec_per_sample;
 
 	int found_index = match_single_sample(_ctx.track_keys, _ctx.rec_keys,
 			start_sec_of_track, end_sec_of_track, 
 			0, sample_size_secs, 
 			0, nsecs_to_match);
-
+	_ctx.rec_keys.clear();
 	LOGD(TAG,"match_sample(): Found: %d\n", found_index);
 	return found_index;
 }
-
+/*
 void start_playing()
 {
 	setPlayerState(_ctx.p, SL_PLAYSTATE_PLAYING);
@@ -259,7 +263,7 @@ int recorder_state()
 	return getRecorderState(_ctx.p);
 }
 
-
+*/
 
 void create_file (const char * fname, const float* data, int size)
 {	

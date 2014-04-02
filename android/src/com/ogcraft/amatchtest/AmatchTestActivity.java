@@ -83,6 +83,8 @@ public class AmatchTestActivity
     private double found_sec = 0;
     private int currentPlayingTime_ms = 0;
     private int translationMaxDuration_ms = 0;
+    private long recording_start_ms = 0;
+    private long recording_end_ms = 0;
     private long matching_start_ms = 0;
     private long matching_end_ms = 0;
     private long seek_start_ms = 0;
@@ -125,22 +127,27 @@ public class AmatchTestActivity
 
                 matching_end_ms = System.currentTimeMillis();
 
-                found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
+                found_sec = i * SEC_PER_KEY;// + (time_to_match_ms / 1000.0);
                 Log.d(TAG,"found_sec: " + found_sec);
                 // add delay from algorithm
                 //found_sec = (amatch_interface.delay_per_sec()+1) * found_sec;
-                found_sec = found_sec + amatch_interface.num_sec_to_record();
+                //found_sec = found_sec + amatch_interface.num_sec_to_record();
 
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
-                double search_time_ms = matching_end_ms - matching_start_ms;
-                Log.d(TAG,"search_time_ms: " + search_time_ms);
+                
+                recording_end_ms = System.currentTimeMillis();
+                long recording_time_ms = recording_end_ms - recording_start_ms;
+
+                Log.d(TAG,String.format("recording_time_ms: %d (%d - %d)", 
+                                    recording_time_ms, recording_end_ms, recording_start_ms));
+                long calculated_ms = (long)found_sec*1000 + recording_time_ms; 
                 if( i > 10 && 
-                    (found_sec*1000 < translationMaxDuration_ms)) {
-                    v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
-                    play_translation(translation_fn, (long) found_sec*1000);
+                    (calculated_ms < translationMaxDuration_ms)) {
+                    v.setText("Found sec: " + calculated_ms/1000.0 + " Search took: " + recording_start_ms/1000.0 + " sec" );
+                    play_translation(translation_fn, (long) calculated_ms);
                 } else {
-                    v.setText("Not found. " + " Search took: " + search_time_ms/1000.0 + " sec.\n Please sync again");
+                    v.setText("Not found. " + " Search took: " + recording_time_ms/1000.0 + " sec.\n Please sync again");
                     //play_recorded();
                 }
             }
@@ -199,14 +206,14 @@ public class AmatchTestActivity
         ((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
         TextView v1 = (TextView)findViewById(R.id.found_display);
         v1.setText("");
-        start_recording_thread();
+        //start_recording_thread();
     }
 
     public void onDestroy(){
         
         super.onDestroy();
         Log.d(TAG, "onDestroy(): Stop recording.");
-        amatch_interface.stop_recording();
+        //amatch_interface.stop_recording();
         //amatch_interface.close_audo_device();
         //recorder_thread.interrupt();
         recorder_thread.finish();
@@ -302,7 +309,21 @@ public class AmatchTestActivity
         TextView v1 = (TextView)findViewById(R.id.found_display);
         
         v1.setText("Please wait. Synchronizing...");
-        
+        start_recording_thread();
+    }
+
+
+    public void start_recording_thread()
+    {   
+        //isEngineInitialized = true;
+        recorder_thread = new RecorderThread();
+        recorder_thread.start();
+      
+    }
+
+    public void start_matching_thread()
+    {
+        Log.d(TAG,"Start match_thread");
         Runnable runnable = new Runnable() {
             public void run() {         
                 Log.d(TAG,"Start searching");
@@ -323,14 +344,6 @@ public class AmatchTestActivity
       };
       match_thread  = new Thread(runnable);
       match_thread.start();
-    }
-
-    public void start_recording_thread()
-    {   
-        //isEngineInitialized = true;
-        recorder_thread = new RecorderThread();
-        recorder_thread.start();
-      
     }
 
     private int match_sample()
@@ -501,14 +514,19 @@ public class AmatchTestActivity
             int SR = amatch_interface.get_sample_rate();
             int minBytes;
             long baseTimeMs;
-            boolean isRunning = true;
+            boolean isRunning = false;
             boolean isPaused1 = false;
             // Choose 2 arbitrary test frequencies to verify FFT operation
             
-           short[] recorded_samples; 
+           //short[] recorded_samples; 
 
             public RecorderThread() {
-                recorded_samples = new short[amatch_interface.num_samples_to_record()];
+                prepare_to_record();
+            }
+            
+            public void prepare_to_record() {
+                isRunning = true;
+                //recorded_samples = new short[amatch_interface.num_samples_to_record()];
                 minBytes = AudioRecord.getMinBufferSize(SR /*sampleRate*/, 
                       AudioFormat.CHANNEL_IN_MONO,
                       AudioFormat.ENCODING_PCM_16BIT);
@@ -517,27 +535,50 @@ public class AmatchTestActivity
                   AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,  minBytes*10);
                 Log.d(TAG, "Buffer size: " + minBytes + " (" + record.getSampleRate() + "=" + SR + ")");
             }
+            
+            public void do_recording_fixed(int nsamples) {
+                recording_start_ms = System.currentTimeMillis();
+                short[] audioSamples = new short[minBytes];
+                Log.d(TAG,"Start recording by AudioTrack");
+                record.startRecording();
+
+                while(!Thread.currentThread().isInterrupted()){
+                    int b = record.read(audioSamples,0, minBytes);
+                    amatch_interface.put_recorded_samples(audioSamples, b);
+                    if(amatch_interface.get_recorded_samples_size() >= nsamples) {
+                        break;
+                    }
+                }
+                Log.i(TAG, "Releasing Audio");
+                record.stop();
+                record.release();
+                record = null;
+                start_matching_thread();
+            }
+            public void do_recording() {
+                short[] audioSamples = new short[minBytes];
+                Log.d(TAG,"Start recording by AudioTrack");
+                record.startRecording();
+
+                short offset = 0;
+                while(!Thread.currentThread().isInterrupted()){
+                    int b = record.read(audioSamples,0, minBytes);
+                    amatch_interface.put_recorded_samples(audioSamples, b);
+                }
+                Log.i(TAG, "Releasing Audio");
+                record.stop();
+                record.release();
+                record = null;
+            }
 
             @Override
             public void run() {
-              short[] audioSamples = new short[minBytes];
-              Log.d(TAG,"Start recording by AudioTrack");
-              record.startRecording();
-
-              short offset = 0;
-            while(!Thread.currentThread().isInterrupted()){
-                 int b = record.read(audioSamples,0, minBytes);
-                 amatch_interface.put_recorded_samples(audioSamples, b);
-             }
-             Log.i(TAG, "Releasing Audio");
-             record.stop();
-             record.release();
-             record = null;
-         }
+                do_recording_fixed(amatch_interface.num_samples_to_record());    
+            }
             public void finish() {
               isRunning=false;
               interrupt();
             }
-          }
+        }
 
 }

@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.22"
+#define AMATCH_VER "1.30a"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
@@ -40,7 +40,11 @@ int generate_fp_keys_from_in();
 int match_sample();
 
 int recording();
+void get_recorded_samples(float p[]);
+void put_recorded_samples(short p[], int size);
+int get_recorded_samples_size();
 
+/*
 void start_playing();
 void stop_playing();
 void pause_playing();
@@ -49,10 +53,8 @@ void stop_recording();
 void pause_recording();
 int player_state();
 int recorder_state();
+*/
 
-void get_recorded_samples(float p[]);
-void put_recorded_samples(short p[], int size);
-int get_recorded_samples_size();
 
 void write_recorded_as_file (const char * fname);
 
