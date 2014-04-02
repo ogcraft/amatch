@@ -30,7 +30,7 @@ const char* amatch_version()
 
 }
 
-int nrecsamples()
+int num_samples_to_record()
 {
 	return NRECSAMPLES;
 }

@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	const char* outfname = "/storage/sdcard0/asearch/testrec.wav";
 	read_track_fpkeys(track_keys_fn);
 
-	int maxsamps = nrecsamples();
+	int maxsamps = num_samples_to_record();
 	
 	if(!open_audio_device()) {
 		printf("Failed to open audio_device\n");

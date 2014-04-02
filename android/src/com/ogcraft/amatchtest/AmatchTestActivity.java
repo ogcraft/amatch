@@ -9,56 +9,46 @@ import amatch_generated.amatch_interface;
 import com.lamerman.FileDialog;
 import com.lamerman.SelectionMode;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder; 
-import java.nio.FloatBuffer; 
-import java.util.concurrent.TimeUnit;
-import android.os.PowerManager; 
-import android.util.Log; 
-import android.widget.Toast; 
 import android.app.Activity;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
-import android.media.MediaPlayer;
+import android.media.AudioTrack;
 import android.media.MediaPlayer.OnCompletionListener; 
 import android.media.MediaPlayer.OnErrorListener; 
 import android.media.MediaPlayer.OnPreparedListener;
 import android.media.MediaPlayer.OnSeekCompleteListener;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder.AudioSource;
 import android.media.audiofx.AutomaticGainControl;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.app.Activity;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
+import android.os.Handler;
 import android.os.Message;
+import android.os.Message;
+import android.os.PowerManager; 
 import android.os.SystemClock;
+import android.util.Log;
+import android.util.Log; 
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
-import android.widget.AdapterView;
+import android.view.View;
+import android.view.View;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -66,7 +56,14 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.Toast; 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder; 
+import java.nio.FloatBuffer; 
+import java.util.concurrent.TimeUnit;
 
 public class AmatchTestActivity 
     extends Activity 
@@ -74,18 +71,20 @@ public class AmatchTestActivity
 {
     /** Called when the activity is first created. */
     private static final String TAG = "Amatch";
-    private boolean isEngineInitialized = false;
-    private boolean isRecordedEnough = false;
+    //private boolean isEngineInitialized = false;
     private boolean isMediaPlayerReady = false;
+    private boolean isMediaPlayerPlaying = false;
+    private boolean isMatching = false;
     private String data_root_path = "";
     private String track_keys_fn = data_root_path;
     private String translation_fn = data_root_path;
     private static double SEC_PER_KEY = 0.011609977324263039;
+    private static int testcount1 = 0;
     private double found_sec = 0;
     private int currentPlayingTime_ms = 0;
-    private int finalTime_ms = 0;
-    private long recording_start_ms = 0;
-    private long recording_end_ms = 0;
+    private int translationMaxDuration_ms = 0;
+    private long matching_start_ms = 0;
+    private long matching_end_ms = 0;
     private long seek_start_ms = 0;
     private long seek_end_ms = 0;
     private long prepare_start_ms = 0;
@@ -93,14 +92,14 @@ public class AmatchTestActivity
     private int updateMs = 150;
     int file_selecting_button_id = R.id.btn_load_fpkeys;
     // Media Player
-    private  MediaPlayer mp = null;
+    private MediaPlayer mp = null;
     private SeekBar seekbar;
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
     private Thread load_fpkeys_thread;
     private Thread match_thread;
     private Thread player_thread;
-    private Looper recorder_thread;
+    private RecorderThread recorder_thread;
     
     Handler load_fpkeys_thread_handler = new Handler() {
         @Override
@@ -121,19 +120,23 @@ public class AmatchTestActivity
                 int i = bundle.getInt("FoundIndex");
                 long time_to_match_ms = bundle.getLong("time_to_match_ms");
                 Log.d(TAG,"FoundIndex: n = " + i);
-                recording_end_ms = System.currentTimeMillis();
+                
+                isMatching = false;
+
+                matching_end_ms = System.currentTimeMillis();
 
                 found_sec = i * SEC_PER_KEY + (time_to_match_ms / 1000.0);
                 Log.d(TAG,"found_sec: " + found_sec);
                 // add delay from algorithm
                 //found_sec = (amatch_interface.delay_per_sec()+1) * found_sec;
                 found_sec = found_sec + amatch_interface.num_sec_to_record();
+
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
                 TextView v = (TextView)findViewById(R.id.found_display);
-                double search_time_ms = recording_end_ms - recording_start_ms;
+                double search_time_ms = matching_end_ms - matching_start_ms;
                 Log.d(TAG,"search_time_ms: " + search_time_ms);
                 if( i > 10 && 
-                    (found_sec*1000 < finalTime_ms)) {
+                    (found_sec*1000 < translationMaxDuration_ms)) {
                     v.setText("Found sec: " + found_sec + " Search took: " + search_time_ms/1000.0 + " sec" );
                     play_translation(translation_fn, (long) found_sec*1000);
                 } else {
@@ -169,7 +172,7 @@ public class AmatchTestActivity
                 intent.putExtra(FileDialog.START_PATH, data_root_path);
                 intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
                 // set file filter
-                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "fpkeys" });
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "fpkeys", "fpkey" });
                 intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
                 AmatchTestActivity.this.startActivityForResult(intent, FileAction.LOAD.value);
             }
@@ -198,6 +201,7 @@ public class AmatchTestActivity
         v1.setText("");
         start_recording_thread();
     }
+
     public void onDestroy(){
         
         super.onDestroy();
@@ -206,7 +210,7 @@ public class AmatchTestActivity
         //amatch_interface.close_audo_device();
         //recorder_thread.interrupt();
         recorder_thread.finish();
-        isEngineInitialized = false;
+        //isEngineInitialized = false;
         mp.stop();
         isMediaPlayerReady = false;
         load_fpkeys_thread = null;
@@ -272,7 +276,11 @@ public class AmatchTestActivity
     
     public void btn_stopClick(View view)
     {
-        mp.stop();
+        if(isMediaPlayerPlaying) 
+        {
+            isMediaPlayerPlaying = false;
+            mp.pause();
+        }
     }
    
     public void btn_start_searchClick(View view)
@@ -280,21 +288,30 @@ public class AmatchTestActivity
         if(!isMediaPlayerReady)
         {
             Log.d(TAG,"btn_start_searchClick(): MediaPlayer still not Ready.");
+            Toast.makeText(getApplicationContext(), "MediaPlayer still not Ready.", Toast.LENGTH_SHORT).show();
             return;
         }
+        if(isMatching)
+        {
+            Toast.makeText(getApplicationContext(), "Still in progress. Please wait...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        isMatching = true;
         TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
         v.setEnabled(false);
         TextView v1 = (TextView)findViewById(R.id.found_display);
+        
         v1.setText("Please wait. Synchronizing...");
         
         Runnable runnable = new Runnable() {
             public void run() {         
                 Log.d(TAG,"Start searching");
-                recording_start_ms = System.currentTimeMillis();
-                //int found_index = 86 * 4000; //match_sample();
+                matching_start_ms = System.currentTimeMillis();
+                testcount1 = testcount1 + 1;
+                //int found_index = 86 * 1000 * (testcount1 % 5); //match_sample();
                 int found_index = match_sample();
                 long index_found_ms = System.currentTimeMillis();
-                long time_to_match_ms = index_found_ms - recording_start_ms; 
+                long time_to_match_ms = index_found_ms - matching_start_ms; 
                 Log.d(TAG,"found_index: " + found_index + " ms took: " + time_to_match_ms);
                 Message msg = player_thread_handler.obtainMessage();
                 Bundle bundle = new Bundle();
@@ -310,107 +327,29 @@ public class AmatchTestActivity
 
     public void start_recording_thread()
     {   
-        isEngineInitialized = true;
-        recorder_thread = new Looper();
+        //isEngineInitialized = true;
+        recorder_thread = new RecorderThread();
         recorder_thread.start();
       
     }
 
-/*    
-    public void start_recording_thread1()
-    {   
-        if(!isEngineInitialized) {
-            if(!amatch_interface.open_audio_device()) {
-                Log.e(TAG,"Failed to open audio_device");
-                return;
-            } else {
-                
-                isEngineInitialized = true;
-            }
-        }
-        Runnable runnable = new Runnable() {
-            public void run() {         
-                Log.d(TAG,"Start recording thread");
-                amatch_interface.start_recording();
-                recording_start_ms = System.currentTimeMillis();
-                Log.d(TAG,"Recorder state: " + amatch_interface.recorder_state());
-                try {
-                    int nmax = amatch_interface.nrecsamples();
-                    while(!Thread.currentThread().isInterrupted()){
-                          int n = amatch_interface.recording();
-                          if(n >= nmax) {
-                              isRecordedEnough = true;
-                              Log.d(TAG,"Recording thread: samples:" + n);
-                              Thread.sleep(1000);  
-                          }
-                    }
-                 }
-                 catch (InterruptedException x) {
-                    return;
-                 }
-            }
-      };
-      recorder_thread  = new Thread(runnable);
-      recorder_thread.start();
-    }
- */   
     private int match_sample()
     {
-        
-        Log.d(TAG,"Start match_samples()");
-        //while(!isRecordedEnough) {
-        //    try {
-        //        Thread.sleep(1000);
-        //    } catch (InterruptedException x) {
-        //        return 0;
-        //     }
-        //}
         Log.d(TAG,"START MATCHING...");         
         amatch_interface.generate_fp_keys_from_in();
         int found_index = amatch_interface.match_sample();
         return found_index;
     
     }
-    
-    public void  play_recorded(){
-        Log.d(TAG,"Play recorded");
-        //try
-        //{
-            int sz = amatch_interface.get_recorded_samples_size();
-            Log.d(TAG,"sz: " + sz);
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, amatch_interface.get_sample_rate(), 
-                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 4096, AudioTrack.MODE_STREAM);
-            
-            audioTrack.play();
-            
-            float recs[] = new float[sz];
-            
-            amatch_interface.get_recorded_samples(recs);
-            
-            short samples[] = new short[sz];
-            Log.d(TAG, "-----------------\n");
-            for( int i = 0; i < sz; i++ ) {
-                samples[i] = (short)(recs[i]*Short.MAX_VALUE);
-            }
-
-            audioTrack.write(samples, 0, sz);
-            
-            audioTrack.stop();
-            audioTrack.release();
-        //}
-        //catch (IOException e)
-        //{
-           
-        //}
-
-    }
-
+ 
     void  createMediaPlayerForTranslation(String translation_fn) { 
         if(translation_fn.length() <= data_root_path.length()+ 3)
         {
             Log.d(TAG,String.format("Translation filename: %s is not correct!",translation_fn));
+            Toast.makeText(getApplicationContext(), "Translation filename is not correct", Toast.LENGTH_SHORT).show();
             return;
         }
+        isMediaPlayerPlaying = false;
         if (mp == null) { 
             mp = new  MediaPlayer(); 
  
@@ -454,8 +393,8 @@ public class AmatchTestActivity
         // The media player is done preparing. That means we can start playing!
         prepare_end_ms = System.currentTimeMillis();
         Log.d(TAG, String.format("onPrepared(): prepare took: %d ms", prepare_end_ms - prepare_start_ms));
-        finalTime_ms = mp.getDuration();
-        Log.d(TAG,String.format("onPrepared(): Max Duration: ",finalTime_ms));
+        translationMaxDuration_ms = mp.getDuration();
+        Log.d(TAG,String.format("onPrepared(): Max Duration: ",translationMaxDuration_ms));
     } 
 
     @Override
@@ -468,13 +407,14 @@ public class AmatchTestActivity
         seek_end_ms = System.currentTimeMillis();
         Log.d(TAG, String.format("onSeekComplete() seek to: %d took: %d ms", 
             mp.getCurrentPosition(), seek_end_ms - seek_start_ms));
-        Log.d(TAG, String.format("From search_start_ms till seek_end ms: %d", seek_end_ms-recording_start_ms));
+        Log.d(TAG, String.format("From search_start_ms till seek_end ms: %d", seek_end_ms-matching_start_ms));
         //mp.setVolume(1.0f, 1.0f); // we can be loud 
+        isMediaPlayerPlaying = true;
         mp.start();
-        finalTime_ms = mp.getDuration();
-        Log.d(TAG,String.format("onSeekComplete() finalTime_ms: %d", finalTime_ms));
+        translationMaxDuration_ms = mp.getDuration();
+        Log.d(TAG,String.format("onSeekComplete() translationMaxDuration_ms: %d", translationMaxDuration_ms));
         Log.d(TAG,"seekbar: " + seekbar);
-        seekbar.setMax((int)finalTime_ms);
+        seekbar.setMax((int)translationMaxDuration_ms);
         long t = mp.getCurrentPosition();
         Log.d(TAG, String.format("onSeekComplete(): curentPos: %d", t));
         seekbar.setProgress((int)t);
@@ -485,16 +425,17 @@ public class AmatchTestActivity
         // Play translation
         try {
             Log.d(TAG,String.format("play_translation from %d ms", from_ms));
-            if(from_ms >= finalTime_ms)
+            if(from_ms >= translationMaxDuration_ms)
             {
                 Log.d(TAG, String.format("play_translation(), requested time %d is more than Max Duration: %d",
-                    from_ms, finalTime_ms));
+                    from_ms, translationMaxDuration_ms));
+                Toast.makeText(getApplicationContext(), "Translation position out of bounds", Toast.LENGTH_SHORT).show();
             }
             seek_start_ms = System.currentTimeMillis();
             Log.d(TAG, "play_translation(): Seeking to " + from_ms);
             // Move song to particular second
             mp.seekTo((int)from_ms); // position in milliseconds
-            //mp.start();
+        
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         } catch (IllegalStateException e) {
@@ -513,20 +454,52 @@ public class AmatchTestActivity
                    String.format("Playing %.2f ( %3d:%02d ) sec from %.2f sec",
                                     currentPlayingTime_ms / 1000.0,
                                     min, sec,
-                                    finalTime_ms / 1000.0
+                                    translationMaxDuration_ms / 1000.0
                    ));
            
            seekbar.setProgress((int)currentPlayingTime_ms);
            seekbar_handler.postDelayed(this, 100);
         }
      };
+   
+    public void  play_recorded(){
+        Log.d(TAG,"Play recorded");
+        //try
+        //{
+            int sz = amatch_interface.get_recorded_samples_size();
+            Log.d(TAG,"sz: " + sz);
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, amatch_interface.get_sample_rate(), 
+                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 4096, AudioTrack.MODE_STREAM);
+            
+            audioTrack.play();
+            
+            float recs[] = new float[sz];
+            
+            amatch_interface.get_recorded_samples(recs);
+            
+            short samples[] = new short[sz];
+            Log.d(TAG, "-----------------\n");
+            for( int i = 0; i < sz; i++ ) {
+                samples[i] = (short)(recs[i]*Short.MAX_VALUE);
+            }
 
-     //////////////////////////////////// Recorder Looper ////////////////////
-     public class Looper extends Thread {
+            audioTrack.write(samples, 0, sz);
+            
+            audioTrack.stop();
+            audioTrack.release();
+        //}
+        //catch (IOException e)
+        //{
+           
+        //}
+
+    }
+
+     //////////////////////////////////// Recorder RecorderThread ////////////////////
+     public class RecorderThread extends Thread {
             AudioRecord record;
             int SR = amatch_interface.get_sample_rate();
             int minBytes;
-            //int bytesToRecord = SR * 20;
             long baseTimeMs;
             boolean isRunning = true;
             boolean isPaused1 = false;
@@ -534,15 +507,15 @@ public class AmatchTestActivity
             
            short[] recorded_samples; 
 
-            public Looper() {
-                recorded_samples = new short[SR*20+1];
-              minBytes = AudioRecord.getMinBufferSize(SR /*sampleRate*/, 
+            public RecorderThread() {
+                recorded_samples = new short[amatch_interface.num_samples_to_record()];
+                minBytes = AudioRecord.getMinBufferSize(SR /*sampleRate*/, 
                       AudioFormat.CHANNEL_IN_MONO,
                       AudioFormat.ENCODING_PCM_16BIT);
-              Log.d(TAG, " Recomended min buffer: " + minBytes); 
-              record =  new AudioRecord( AudioSource.MIC,SR,
+                Log.d(TAG, " Recomended min buffer: " + minBytes); 
+                record =  new AudioRecord( AudioSource.MIC,SR,
                   AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,  minBytes*10);
-              Log.d(TAG, "Buffer size: " + minBytes + " (" + record.getSampleRate() + "=" + SR + ")");
+                Log.d(TAG, "Buffer size: " + minBytes + " (" + record.getSampleRate() + "=" + SR + ")");
             }
 
             @Override
@@ -556,7 +529,6 @@ public class AmatchTestActivity
                  int b = record.read(audioSamples,0, minBytes);
                  amatch_interface.put_recorded_samples(audioSamples, b);
              }
-             isRecordedEnough = true;
              Log.i(TAG, "Releasing Audio");
              record.stop();
              record.release();

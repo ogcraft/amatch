@@ -2,13 +2,13 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.21"
+#define AMATCH_VER "1.22"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
 #define SEC_TO_RECORD 20.0
 #define SEC_TO_MATCH 7.0
-#define NRECSAMPLES (SR * (SEC_TO_RECORD))
+#define NRECSAMPLES (int)(SR * (SEC_TO_RECORD))
 
 #define DELAY_PER_SEC 0.00255126
 
@@ -17,7 +17,7 @@ extern "C" {
 struct amatch_context;
 
 const char* amatch_version();
-int nrecsamples();
+int num_samples_to_record();
 double num_sec_to_record();
 int get_sample_rate();
 double delay_per_sec();
