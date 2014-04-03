@@ -845,7 +845,7 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1V
   
   (void)jenv;
   (void)jcls;
-  result = (char *)("1.30a");
+  result = (char *)("1.32");
   if (result) jresult = jenv->NewStringUTF((const char *)result);
   return jresult;
 }
@@ -1086,18 +1086,6 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_match_1sampl
 }
 
 
-SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_recording(JNIEnv *jenv, jclass jcls) {
-  jint jresult = 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (int)recording();
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
 SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1recorded_1samples(JNIEnv *jenv, jclass jcls, jfloatArray jarg1) {
   float *arg1 ;
   jfloat *jarr1 ;
@@ -1135,6 +1123,13 @@ SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_get_1recorde
   result = (int)get_recorded_samples_size();
   jresult = (jint)result; 
   return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_clear_1recorded_1samples(JNIEnv *jenv, jclass jcls) {
+  (void)jenv;
+  (void)jcls;
+  clear_recorded_samples();
 }
 
 

@@ -5,7 +5,7 @@
 #include <sys/time.h> 
 #include <assert.h> 
 
-#include <boost/circular_buffer.hpp>
+//#include <boost/circular_buffer.hpp>
 #include "logging.h"
 #include "amatch.h"
 #include "utils.h"
@@ -16,7 +16,7 @@
 //void writekeys(const key_vector keys, const char* fn);
 
 key_vector& recorded_keys();
-boost::circular_buffer<float>& get_record_buffer();
+//boost::circular_buffer<float>& get_record_buffer();
 
 #define		BUFFER_LEN		1024
 
@@ -71,12 +71,12 @@ int main(int argc, char** argv)
 		int samps = 0;
 		printf("maxsamps: %d\n", maxsamps);
 		while(samps < maxsamps) {
-			samps = recording();
+			//samps = recording();
 			printf("samps %d of %d\n", samps, maxsamps);
 		}		
 		printf("Recorded %d samples\n", samps);
 		
-		create_file (outfname, SF_FORMAT_WAV | SF_FORMAT_PCM_16, get_record_buffer().linearize(), get_record_buffer().size());
+		//create_file (outfname, SF_FORMAT_WAV | SF_FORMAT_PCM_16, get_record_buffer().linearize(), get_record_buffer().size());
 		
 		return 0;
 		generate_fp_keys_from_in();

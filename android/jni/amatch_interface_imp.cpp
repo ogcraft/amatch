@@ -10,7 +10,8 @@ amatch_interface.c:
 #include <assert.h> 
 #include <algorithm>
 
-#include <boost/circular_buffer.hpp>
+//#include <boost/circular_buffer.hpp>
+#include <boost/array.hpp>
 #include "amatch.h"
 #include "utils.h"
 #include "amatch_interface.h"
@@ -57,16 +58,18 @@ struct amatch_context
 	key_vector track_keys;
 	key_vector rec_keys;
 	//float  record_buffer[NSAMPLES];
-	boost::circular_buffer<float> record_buffer;
+	//boost::circular_buffer<float> record_buffer;
+	int recorded_samples;
+	boost::array<float, NRECSAMPLES> record_buffer;
 	amatch_context();
 };
 
 static amatch_context _ctx;
 
 amatch_context::amatch_context()
-	:p(NULL),track_keys(),rec_keys(),record_buffer(NRECSAMPLES)
+	:p(NULL),track_keys(),rec_keys(),recorded_samples(0)
 {
-
+	record_buffer.assign(0.0);
 }
 
 key_vector& recorded_keys()
@@ -74,10 +77,10 @@ key_vector& recorded_keys()
 	return _ctx.rec_keys;
 }
 
-boost::circular_buffer<float>& get_record_buffer()
-{
-	return _ctx.record_buffer;
-}
+//boost::circular_buffer<float>& get_record_buffer()
+//{
+//	return _ctx.record_buffer;
+//}
 
 void get_recorded_samples(float p[])
 {
@@ -88,13 +91,20 @@ void put_recorded_samples(short p[], int size)
 {
 	for(int i = 0; i < size; i++) {
 		float f = ((float) p[i]) * CONVMYFLT;
-		_ctx.record_buffer.push_back(f);
+		_ctx.record_buffer[_ctx.recorded_samples] = f;
+		_ctx.recorded_samples++;
 	}
 }
 
 int get_recorded_samples_size()
 {
-	return _ctx.record_buffer.size();
+	return _ctx.recorded_samples;
+}
+
+void clear_recorded_samples()
+{
+	_ctx.recorded_samples = 0;
+	return _ctx.record_buffer.assign(0.0);
 }
 
 amatch_context* get_amatch_context()
@@ -159,6 +169,7 @@ int read_audio_in(float inbuffer[], size_t nsamples)
 	return samps;
 }
 
+/*
 int recording()
 {
 	//LOGD(TAG,"recording()");
@@ -167,6 +178,7 @@ int recording()
 	return _ctx.record_buffer.size();
 
 }
+*/
 
 int recording1()
 {
@@ -198,9 +210,9 @@ int generate_fp_keys_from_in()
 	_ctx.rec_keys.clear();
 
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
-	fpkeys_from_samples(_ctx.record_buffer.linearize(), samps_to_match, SR, _ctx.rec_keys);
+	//fpkeys_from_samples(_ctx.record_buffer.linearize(), samps_to_match, SR, _ctx.rec_keys);
+	fpkeys_from_samples(_ctx.record_buffer.c_array(), samps_to_match, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
-	_ctx.record_buffer.clear();
 	return _ctx.rec_keys.size();
 }
 		
@@ -296,5 +308,5 @@ void create_file (const char * fname, const float* data, int size)
 void write_recorded_as_file (const char * fname)
 {
 	LOGD(TAG,"write_recorded_as_file(): %s\n", fname);
-	create_file (fname, _ctx.record_buffer.linearize(), _ctx.record_buffer.size());
+	create_file (fname, _ctx.record_buffer.c_array(), _ctx.record_buffer.size());
 }

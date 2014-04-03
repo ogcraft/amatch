@@ -134,20 +134,20 @@ public class AmatchTestActivity
                 //found_sec = found_sec + amatch_interface.num_sec_to_record();
 
                 Log.d(TAG,"Starting playing from " + found_sec + " sec");
-                TextView v = (TextView)findViewById(R.id.found_display);
+                //TextView v = (TextView)findViewById(R.id.found_display);
                 
                 recording_end_ms = System.currentTimeMillis();
                 long recording_time_ms = recording_end_ms - recording_start_ms;
 
-                Log.d(TAG,String.format("recording_time_ms: %d (%d - %d)", 
+                Log.d(TAG,String.format("**** recording_time_ms: %d (%d - %d)", 
                                     recording_time_ms, recording_end_ms, recording_start_ms));
-                long calculated_ms = (long)found_sec*1000 + recording_time_ms; 
+                long calculated_ms = (long)found_sec*1000 + recording_time_ms + 500; 
                 if( i > 10 && 
                     (calculated_ms < translationMaxDuration_ms)) {
-                    v.setText("Found sec: " + calculated_ms/1000.0 + " Search took: " + recording_start_ms/1000.0 + " sec" );
+                    display_msg("Found sec: " + calculated_ms/1000.0 + " Search took: " + recording_start_ms/1000.0 + " sec" );
                     play_translation(translation_fn, (long) calculated_ms);
                 } else {
-                    v.setText("Not found. " + " Search took: " + recording_time_ms/1000.0 + " sec.\n Please sync again");
+                    display_msg("Not found. " + " Search took: " + recording_time_ms/1000.0 + " sec.\n Please sync again");
                     //play_recorded();
                 }
             }
@@ -204,21 +204,26 @@ public class AmatchTestActivity
         TextView v = (TextView)findViewById(R.id.fpkeys_fn);
         v.setText("Amatch ver: " + amatch_interface.amatch_version());
         ((TextView)findViewById(R.id.btn_start_search)).setEnabled(false);
-        TextView v1 = (TextView)findViewById(R.id.found_display);
-        v1.setText("");
+        //TextView v1 = (TextView)findViewById(R.id.found_display);
+        display_msg("");
         //start_recording_thread();
     }
 
     public void onDestroy(){
         
         super.onDestroy();
-        Log.d(TAG, "onDestroy(): Stop recording.");
+        Log.d(TAG, "onDestroy(): Stop.");
         //amatch_interface.stop_recording();
         //amatch_interface.close_audo_device();
         //recorder_thread.interrupt();
-        recorder_thread.finish();
+        if(recorder_thread != null){
+            recorder_thread.finish();
+            recorder_thread = null;
+        }
         //isEngineInitialized = false;
-        mp.stop();
+        if(mp != null) {
+            mp.stop();
+        }
         isMediaPlayerReady = false;
         load_fpkeys_thread = null;
         
@@ -306,12 +311,17 @@ public class AmatchTestActivity
         isMatching = true;
         TextView v = (TextView)findViewById(R.id.btn_load_fpkeys);
         v.setEnabled(false);
-        TextView v1 = (TextView)findViewById(R.id.found_display);
-        
-        v1.setText("Please wait. Synchronizing...");
+        //TextView v1 = (TextView)findViewById(R.id.found_display);
+        //v1.setText("Please wait. Synchronizing. Recording...");
+        display_msg("Please wait. Synchronizing...");
         start_recording_thread();
     }
 
+    public void display_msg(String msg)
+    {
+        TextView v1 = (TextView)findViewById(R.id.found_display);
+        v1.setText(msg);
+    }
 
     public void start_recording_thread()
     {   
@@ -324,6 +334,7 @@ public class AmatchTestActivity
     public void start_matching_thread()
     {
         Log.d(TAG,"Start match_thread");
+        
         Runnable runnable = new Runnable() {
             public void run() {         
                 Log.d(TAG,"Start searching");
@@ -537,6 +548,7 @@ public class AmatchTestActivity
             }
             
             public void do_recording_fixed(int nsamples) {
+                amatch_interface.clear_recorded_samples();
                 recording_start_ms = System.currentTimeMillis();
                 short[] audioSamples = new short[minBytes];
                 Log.d(TAG,"Start recording by AudioTrack");
