@@ -99,7 +99,7 @@ public class AmatchTestActivity
     private Handler seekbar_handler = new Handler();
     private TextView progress_display_view;
     private Thread load_fpkeys_thread;
-    private Thread match_thread;
+    //private Thread match_thread;
     private Thread player_thread;
     private RecorderThread recorder_thread;
     
@@ -331,31 +331,6 @@ public class AmatchTestActivity
       
     }
 
-    public void start_matching_thread()
-    {
-        Log.d(TAG,"Start match_thread");
-        
-        Runnable runnable = new Runnable() {
-            public void run() {         
-                Log.d(TAG,"Start searching");
-                matching_start_ms = System.currentTimeMillis();
-                testcount1 = testcount1 + 1;
-                //int found_index = 86 * 1000 * (testcount1 % 5); //match_sample();
-                int found_index = match_sample();
-                long index_found_ms = System.currentTimeMillis();
-                long time_to_match_ms = index_found_ms - matching_start_ms; 
-                Log.d(TAG,"found_index: " + found_index + " ms took: " + time_to_match_ms);
-                Message msg = player_thread_handler.obtainMessage();
-                Bundle bundle = new Bundle();
-                bundle.putInt("FoundIndex", found_index);
-                bundle.putLong("time_to_match_ms", time_to_match_ms);
-                msg.setData(bundle);
-                player_thread_handler.sendMessage(msg);
-            }
-      };
-      match_thread  = new Thread(runnable);
-      match_thread.start();
-    }
 
     private int match_sample()
     {
@@ -365,7 +340,36 @@ public class AmatchTestActivity
         return found_index;
     
     }
- 
+
+    public void do_matching() {
+        Log.d(TAG,"Start searching");
+        matching_start_ms = System.currentTimeMillis();
+        testcount1 = testcount1 + 1;
+                //int found_index = 86 * 1000 * (testcount1 % 5); //match_sample();
+        int found_index = match_sample();
+        long index_found_ms = System.currentTimeMillis();
+        long time_to_match_ms = index_found_ms - matching_start_ms; 
+        Log.d(TAG,"found_index: " + found_index + " ms took: " + time_to_match_ms);
+        Message msg = player_thread_handler.obtainMessage();
+        Bundle bundle = new Bundle();
+        bundle.putInt("FoundIndex", found_index);
+        bundle.putLong("time_to_match_ms", time_to_match_ms);
+        msg.setData(bundle);
+        player_thread_handler.sendMessage(msg);
+    }
+/*
+    public void start_matching_thread()
+    {
+        Log.d(TAG,"Start match_thread");
+        Runnable runnable = new Runnable() {
+            public void run() {         
+                do_matching();
+            }
+        };
+        match_thread  = new Thread(runnable);
+        match_thread.start();
+    }
+*/
     void  createMediaPlayerForTranslation(String translation_fn) { 
         if(translation_fn.length() <= data_root_path.length()+ 3)
         {
@@ -432,7 +436,7 @@ public class AmatchTestActivity
         Log.d(TAG, String.format("onSeekComplete() seek to: %d took: %d ms", 
             mp.getCurrentPosition(), seek_end_ms - seek_start_ms));
         Log.d(TAG, String.format("From search_start_ms till seek_end ms: %d", seek_end_ms-matching_start_ms));
-        //mp.setVolume(1.0f, 1.0f); // we can be loud 
+        mp.setVolume(1.0f, 1.0f); // we can be loud 
         isMediaPlayerPlaying = true;
         mp.start();
         translationMaxDuration_ms = mp.getDuration();
@@ -565,7 +569,8 @@ public class AmatchTestActivity
                 record.stop();
                 record.release();
                 record = null;
-                start_matching_thread();
+                //start_matching_thread();
+                do_matching();
             }
             public void do_recording() {
                 short[] audioSamples = new short[minBytes];
