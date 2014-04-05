@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#define AMATCH_VER "1.33"
+#define AMATCH_VER "1.34"
 #define BUFFERFRAMES 1024
 #define VECSAMPS_MONO 64
 #define SR 11025
@@ -22,24 +22,14 @@ double num_sec_to_record();
 int get_sample_rate();
 double delay_per_sec();
 
-//bool init_amatch_context();
-//void destroy_amatch_context();
-
-bool open_audio_device();
 
 size_t read_track_fpkeys(const char* fn);
-
-void close_audo_device();
-
-void skip_samples(int nsamples);
-
-int read_audio_in(float inbuffer[], size_t nsamples);
 
 int generate_fp_keys_from_in();
 		
 int match_sample();
 
-//int recording();
+
 void get_recorded_samples(float p[]);
 void put_recorded_samples(short p[], int size);
 int get_recorded_samples_size();
@@ -54,8 +44,14 @@ void stop_recording();
 void pause_recording();
 int player_state();
 int recorder_state();
+bool init_amatch_context();
+void destroy_amatch_context();
+bool open_audio_device();
+void close_audo_device();
+void skip_samples(int nsamples);
+int read_audio_in(float inbuffer[], size_t nsamples);
+int recording();
 */
-
 
 void write_recorded_as_file (const char * fname);
 

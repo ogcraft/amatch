@@ -845,7 +845,7 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1V
   
   (void)jenv;
   (void)jcls;
-  result = (char *)("1.33");
+  result = (char *)("1.34");
   if (result) jresult = jenv->NewStringUTF((const char *)result);
   return jresult;
 }
@@ -995,18 +995,6 @@ SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_delay_1pe
 }
 
 
-SWIGEXPORT jboolean JNICALL Java_amatch_1generated_amatch_1interfaceJNI_open_1audio_1device(JNIEnv *jenv, jclass jcls) {
-  jboolean jresult = 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (bool)open_audio_device();
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
 SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1track_1fpkeys(JNIEnv *jenv, jclass jcls, jstring jarg1) {
   jlong jresult = 0 ;
   char *arg1 = (char *) 0 ;
@@ -1022,42 +1010,6 @@ SWIGEXPORT jlong JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1track
   result = read_track_fpkeys((char const *)arg1);
   jresult = (jlong)result; 
   if (arg1) jenv->ReleaseStringUTFChars(jarg1, (const char *)arg1);
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_close_1audo_1device(JNIEnv *jenv, jclass jcls) {
-  (void)jenv;
-  (void)jcls;
-  close_audo_device();
-}
-
-
-SWIGEXPORT void JNICALL Java_amatch_1generated_amatch_1interfaceJNI_skip_1samples(JNIEnv *jenv, jclass jcls, jint jarg1) {
-  int arg1 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  skip_samples(arg1);
-}
-
-
-SWIGEXPORT jint JNICALL Java_amatch_1generated_amatch_1interfaceJNI_read_1audio_1in(JNIEnv *jenv, jclass jcls, jfloatArray jarg1, jlong jarg2) {
-  jint jresult = 0 ;
-  float *arg1 ;
-  size_t arg2 ;
-  jfloat *jarr1 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  if (!SWIG_JavaArrayInFloat(jenv, &jarr1, (float **)&arg1, jarg1)) return 0; 
-  arg2 = (size_t)jarg2; 
-  result = (int)read_audio_in(arg1,arg2);
-  jresult = (jint)result; 
-  SWIG_JavaArrayArgoutFloat(jenv, jarr1, (float *)arg1, jarg1); 
-  delete [] arg1; 
   return jresult;
 }
 
