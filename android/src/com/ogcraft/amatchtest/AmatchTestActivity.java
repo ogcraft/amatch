@@ -142,6 +142,9 @@ public class AmatchTestActivity
                 Log.d(TAG,String.format("**** recording_time_ms: %d (%d - %d)", 
                                     recording_time_ms, recording_end_ms, recording_start_ms));
                 long calculated_ms = (long)found_sec*1000 + recording_time_ms + 500; 
+
+                gs.amatch.found_dispfound_display_view_handler;
+
                 if( i > 10 && 
                     (calculated_ms < translationMaxDuration_ms)) {
                     display_msg("Found sec: " + calculated_ms/1000.0 + " Search took: " + recording_start_ms/1000.0 + " sec" );
