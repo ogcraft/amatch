@@ -66,10 +66,14 @@ add_executable (amatch_sample_double
 
 target_link_libraries ( amatch_sample
 	libamatch
+    fftw3
+    sndfile
 	)   
 
 target_link_libraries ( amatch_sample_double
 	libamatch
+    fftw3
+    sndfile
 	)   
 
 add_executable (generate_fpkeys 
