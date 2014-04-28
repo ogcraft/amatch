@@ -81,6 +81,17 @@ add_executable (generate_fpkeys
 	)
 
 
+add_executable (split_silence 
+    bin/split_silence.cpp 
+    )
+
+target_link_libraries ( split_silence
+    libamatch
+    fftw3
+    sndfile
+    )
+
+
 if(WIN32)
     target_link_libraries ( generate_fpkeys
             libamatch.lib
