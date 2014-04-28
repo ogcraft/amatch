@@ -9,7 +9,7 @@
 #include <sndfile.h>
 #include "amatch.h"
 #include "utils.h"
-//#include "sigproc.h"
+#include "sigproc.h"
 
 using namespace std;
 
