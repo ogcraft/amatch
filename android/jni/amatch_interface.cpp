@@ -845,7 +845,7 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1V
   
   (void)jenv;
   (void)jcls;
-  result = (char *)("1.35d");
+  result = (char *)("1.36");
   if (result) jresult = jenv->NewStringUTF((const char *)result);
   return jresult;
 }
@@ -905,7 +905,7 @@ SWIGEXPORT jdouble JNICALL Java_amatch_1generated_amatch_1interfaceJNI_SEC_1TO_1
   
   (void)jenv;
   (void)jcls;
-  result = (double)(10.0);
+  result = (double)(7.0);
   jresult = (jdouble)result; 
   return jresult;
 }

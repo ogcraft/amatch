@@ -339,27 +339,24 @@ int match_single_sample_mt(const key_vector& track, const key_vector& sample,
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
     LOGD(TAG,"track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
     LOGD(TAG,"sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
-    key_vector sample1;
+    //key_vector sample1;
+    int shift_between_samples = 2 * keys_in_sec; 
     key_vector sample2;
-    for(int i = 0; i < sample.size(); i++)
+    for(int i = shift_between_samples; i < sample.size(); i++)
     {
-        if(i < sample.size()/2) {
-            sample1.push_back(sample[i]);
-        } else {
             sample2.push_back(sample[i]);
-        }
     }
-    LOGD(TAG,"spliting samples: sz=%d sample2=%d\n",sample1.size(), sample2.size());
-    double secs_to_match1 = sample1.size()*sec_per_sample;
-    double secs_to_match2 = sample2.size()*sec_per_sample;
-    int shift_between_samples = sample1.size(); 
+    LOGD(TAG,"spliting samples: sz=%d sample2=%d\n",sample.size(), sample2.size());
+    double secs_to_match1 = std::min(sample.size()*sec_per_sample, secs_to_match);
+    double secs_to_match2 = std::min(sample2.size()*sec_per_sample, secs_to_match);
+    
     LOGD(TAG,"spliting samples: sec_to_match1=%f sec_to_match2=%f\n", secs_to_match1, secs_to_match2);
     
     int index1 = 0;
     //match_simple( track_spos, track_epos, secs_to_match1, track, sample1, index1); 
     
     boost::thread match_simple_thread1(
-        ::match_simple, track_spos, track_epos, secs_to_match1, track, sample1, boost::ref(index1));
+        ::match_simple, track_spos, track_epos, secs_to_match1, track, sample, boost::ref(index1));
     
     int index2 = 0;
     boost::thread match_simple_thread2(
