@@ -20,7 +20,7 @@ amatch_interface.c:
 
 #include "logging.h"
 
-const char* TAG = "Amatch";
+const char* TAG = "MoovieFish";
 
 #define CONV16BIT 32768
 #define CONVMYFLT (1./32768.)
@@ -213,6 +213,7 @@ int generate_fp_keys_from_in()
 
 	//for(int i = 1000; i < 1100/*SR*/; i++) { printf("samps: %d %f\n", i, samplebuffer[i]); }
 	//fpkeys_from_samples(_ctx.record_buffer.linearize(), samps_to_match, SR, _ctx.rec_keys);
+	LOGD(TAG, "Generating fpkeys from record: recorded samples: %d\n", _ctx.record_buffer.size());
 	fpkeys_from_samples(_ctx.record_buffer.c_array(), samps_to_match, SR, _ctx.rec_keys);
 	LOGD(TAG,"******** Generated samps keys: %d\n", _ctx.rec_keys.size());
 	return _ctx.rec_keys.size();
@@ -220,7 +221,7 @@ int generate_fp_keys_from_in()
 		
 int match_sample()
 {
-	
+	LOGD(TAG, "match_sample(): SEC_TO_MATCH: %f SEC_TO_RECORD: %f\n", SEC_TO_MATCH, SEC_TO_RECORD);
 	double nsecs_to_match = SEC_TO_MATCH;
 	double start_sec_of_track = 0.1;
 	//double end_sec_of_track = 0.1;
@@ -234,7 +235,7 @@ int match_sample()
 	}
 	end_sec_of_track = (nrecords - sample_size_keys +1) * sec_per_sample;
 
-	int found_index = match_single_sample(_ctx.track_keys, _ctx.rec_keys,
+	int found_index = match_single_sample_mt(_ctx.track_keys, _ctx.rec_keys,
 			start_sec_of_track, end_sec_of_track, 
 			0, sample_size_secs, 
 			0, nsecs_to_match);

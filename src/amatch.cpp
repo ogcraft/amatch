@@ -14,6 +14,9 @@
 #include "amatch.h"
 #include "sigproc.h"
 
+#include "logging.h"
+extern const char* TAG;
+
 #define all(C) C.begin(),C.end()
 #define PRINTDIFFVEC( v ) {diff_vector::iterator it;for(it=v.begin();it!=v.end();++it){std::cout << it->first <<","<<it->second<<" ";};std::cout<<std::endl;}
 
@@ -28,7 +31,7 @@ bool less_by_diff_value(diff_type x, diff_type y)
 
 diff_type use_diff_value(diff_type x, diff_type y)
 {
-    //printf(" %f,%f", x.first, y.first);
+    //LOGD(TAG," %f,%f", x.first, y.first);
     return std::make_pair(x.first + y.first, 0);
 }
 
@@ -92,7 +95,7 @@ void calc_dist_double(	size_t start_pos, size_t track_spos, size_t track_epos, c
     unsigned int shift2 = (unsigned int)(shift_sec2 * keys_in_sec);
     unsigned int acc1 = 32;
     unsigned int acc2 = 32;
-    //printf("w: %d nsec: %f\n", w, nsec);
+    //LOGD(TAG,"w: %d nsec: %f\n", w, nsec);
     for(size_t i = 0; i < w; i++) {
         uint32_t t = track[track_spos + start_pos+i];
         uint32_t s1 = sample[sample_spos + i + shift1];
@@ -121,7 +124,7 @@ size_t read_keys_from_file(const std::string& filename, key_vector& keys)
 	}
 
 	if(keys.size() != len) {
-		printf("Read wrong number of keys: %d != %d\n",(int)keys.size(), len); 
+		LOGD(TAG,"Read wrong number of keys: %d != %d\n",(int)keys.size(), len); 
 	}
 
     return len; 
@@ -143,26 +146,26 @@ size_t match_single_pass(const key_vector& record_keys, const key_vector& sample
 
     diff_vector1 diffs(nrecords, std::make_pair(33,0));
     size_t max_i =  (nrecords-(nsec+1) * keys_in_sec);
-    printf("nrecords: %d nsamples:%d max_i: %d\n", (int)nrecords, (int)nsamples, (int)max_i);
+    LOGD(TAG,"nrecords: %d nsamples:%d max_i: %d\n", (int)nrecords, (int)nsamples, (int)max_i);
     size_t i = 0;
     for(; i < max_i; i++ ) {
         int d = calc_dist(i, record_keys, sample_keys, sample_key_start, nsec, 0);
         diffs[i] = std::make_pair(d,i);
     }
     
-    printf("Collected %lu diffs i: %lu\n", diffs.size(), i);
+    LOGD(TAG,"Collected %lu diffs i: %lu\n", diffs.size(), i);
     
     std::pair<int,int> dp = std::make_pair(0,0);//min_diffs(diffs);
     
     int m = dp.first;
     int index = dp.second;
     
-    printf("Found sec: %f at index: %d  minimum: %d\n", index*sec_per_sample, index, m);
+    LOGD(TAG,"Found sec: %f at index: %d  minimum: %d\n", index*sec_per_sample, index, m);
     double diff_in_secs = (sec - index * sec_per_sample);
-    printf("Diff secs_diff: %f \n",  diff_in_secs);
+    LOGD(TAG,"Diff secs_diff: %f \n",  diff_in_secs);
     
     std::string isfound = abs((int)diff_in_secs) > 1 ? "TEST FAILED !!!":"TEST PASSED";
-    printf("%s\n", isfound.c_str());
+    LOGD(TAG,"%s\n", isfound.c_str());
     return 0;
 }
 
@@ -175,24 +178,24 @@ void match_double_pass(	size_t track_spos,  size_t track_epos,  const key_vector
     unsigned nsamples = sample_epos - sample_spos;
     unsigned keys_to_match = (unsigned) secs_to_match * keys_in_sec;
     size_t max_track_pos = ntrack_keys - keys_to_match + 1;
-    printf("max_record_pos: %lu\n", max_track_pos);
+    LOGD(TAG,"max_record_pos: %lu\n", max_track_pos);
     diffs1.reserve(max_track_pos);
     diffs2.reserve(max_track_pos);
     std::fill( all(diffs1), std::make_pair(0.0,0));
     std::fill( all(diffs2), std::make_pair(0.0,0));
-    printf("Doing: ");
+    LOGD(TAG,"Doing: ");
     for(size_t i = 0; i < max_track_pos - 500; i++) {
-        if( i % 5000 == 0 ) printf(" %lu", i);
+        if( i % 5000 == 0 ) LOGD(TAG," %lu", i);
         double d1 = 0;
         double d2 = 0;
         calc_dist_double(i, track_spos, track_epos, track, sample_spos, sample_epos, sample, 
                       secs_to_match, 0, 10, d1, d2);
-        //printf(" d1:%f,d2:%f", d1, d2);
+        //LOGD(TAG," d1:%f,d2:%f", d1, d2);
         diffs1.push_back(std::make_pair(d1,i));
         diffs2.push_back(std::make_pair(d2,i));
     }
-    printf("\n");
-    printf("Calculating diffs1:%lu diffs2:%lu\n", diffs1.size(), diffs2.size());
+    LOGD(TAG,"\n");
+    LOGD(TAG,"Calculating diffs1:%lu diffs2:%lu\n", diffs1.size(), diffs2.size());
     double m1 = 0.0;
     unsigned i1 = 0;
     process_diffs(diffs1, m1, i1);
@@ -201,10 +204,10 @@ void match_double_pass(	size_t track_spos,  size_t track_epos,  const key_vector
     process_diffs(diffs2, m2, i2);
     double sec1 =  (track_ssec + i1 * sec_per_sample);
     double sec2 =  (track_ssec + i2 * sec_per_sample); 
-    printf("Found sec1: %f max1: %f i1: %d | sec2: %f max2: %f i2: %d\n",sec1, m1, i1, sec2, m2, i2); 
+    LOGD(TAG,"Found sec1: %f max1: %f i1: %d | sec2: %f max2: %f i2: %d\n",sec1, m1, i1, sec2, m2, i2); 
     int di = i2-i1;
     double ds = (double)di * sec_per_sample;
-    printf("Diff in secs: %f(%d) relative: %f\n", ds, di, (10.0-ds)/10.0);
+    LOGD(TAG,"Diff in secs: %f(%d) relative: %f\n", ds, di, (10.0-ds)/10.0);
 }
 
 //   ti - index in track 
@@ -230,14 +233,14 @@ double match_sample_simple(size_t ti, size_t si, int msize, const key_vector& tr
 //{
 //    unsigned msize = (unsigned)(match_sec * keys_in_sec);
 //    int len = ie - is;
-//    printf("len: %d msize: %d\n", len, msize);
+//    LOGD(TAG,"len: %d msize: %d\n", len, msize);
 //    double m = 0.0;
 //    for (int i = 0; i < len; i++) {
 //        double d = match_sample_simple(i+is, 1, msize, track, sample);
 //        m += d;
 //        double dd =  d/(m/i); 
 //        if(dd > 1.7) {
-//            printf("Found: index: %d dd:%f\n", i, dd);
+//            LOGD(TAG,"Found: index: %d dd:%f\n", i, dd);
 //            return i;
 //        }
 //    }
@@ -248,7 +251,7 @@ int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& tr
 {
     unsigned msize = (unsigned)(match_sec * keys_in_sec);
     int len = ie - is;
-    printf("len: %d msize: %d\n", len, msize);
+    LOGD(TAG,"len: %d msize: %d\n", len, msize);
     double m = 0.0;
     for (int i = 0; i < len; i++) {
         //double d = match_sample_simple(i+is, 1, msize, track, sample);
@@ -256,7 +259,7 @@ int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& tr
         m += d;
         double dd =  d/(m/i); 
         if(dd > 1.7) {
-            printf("Found: index: %d dd:%f\n", i, dd);
+            LOGD(TAG,"Found: index: %d dd:%f\n", i, dd);
             return i;
         }
     }
@@ -268,22 +271,22 @@ int match_single_sample(const key_vector& track, const key_vector& sample,
                         double sample_ssec, double sample_esec, 
                         double sample_sshift_secs, double secs_to_match)
 {
-    //printf("keys_in_sec: %d\n", keys_in_sec);
-    printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
+    //LOGD(TAG,"keys_in_sec: %d\n", keys_in_sec);
+    LOGD(TAG,"match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
         track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
-    printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
+    LOGD(TAG,"match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
         sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
-    printf("--------------------------------\n"); 
+    LOGD(TAG,"--------------------------------\n"); 
     unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
     unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
     unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
-    printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
-    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
+    LOGD(TAG,"track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
+    LOGD(TAG,"sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
     int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
-    //printf("=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
+    //LOGD(TAG,"=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
     return index;
 }
 
@@ -293,23 +296,67 @@ bool match_single_sample_double_pass(const key_vector& track, const key_vector& 
                         double sample_sshift_secs, double secs_to_match)
 {
     bool ret = true;
-    //printf("keys_in_sec: %d\n", keys_in_sec);
-    printf("match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
+    //LOGD(TAG,"keys_in_sec: %d\n", keys_in_sec);
+    LOGD(TAG,"match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
         track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
-    printf("match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
+    LOGD(TAG,"match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
         sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
-    printf("--------------------------------\n"); 
+    LOGD(TAG,"--------------------------------\n"); 
     unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
     unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
     unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
     unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
-    printf("track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
-    printf("sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
+    LOGD(TAG,"track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
+    LOGD(TAG,"sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
     match_double_pass(track_spos,	track_epos,		track, 
                       sample_spos,	sample_epos,	sample, 
                       secs_to_match, track_ssec, diff1, diff2);
     return ret;
+}
+
+int match_single_sample_mt(const key_vector& track, const key_vector& sample, 
+                        double track_ssec, double track_esec, 
+                        double sample_ssec, double sample_esec, 
+                        double sample_sshift_secs, double secs_to_match)
+{
+    //LOGD(TAG,"keys_in_sec: %d\n", keys_in_sec);
+    LOGD(TAG,"match_single_sample: track_ssec: %fsec (%d) track_esec: %fsec (%d)\n", 
+        track_ssec, (int)(track_ssec * keys_in_sec), track_esec, (int)(track_esec * keys_in_sec));  
+    LOGD(TAG,"match_single_sample: sample_ssec: %fsec (%d) sample_esec: %fsec (%d)\n", 
+        sample_ssec, (int) (sample_ssec * keys_in_sec), sample_esec, (int) (sample_esec * keys_in_sec));  
+    LOGD(TAG,"--------------------------------\n"); 
+    unsigned sample_spos = (unsigned)((sample_ssec + sample_sshift_secs) * keys_in_sec) + 1;
+    unsigned sample_epos = (unsigned)(sample_esec * keys_in_sec);
+    unsigned track_spos = (unsigned)(track_ssec * keys_in_sec) + 1;
+    unsigned track_epos = (unsigned)(track_esec - 10.0) * keys_in_sec;
+    LOGD(TAG,"track_spos: %d track_epos: %d total: %d\n", track_spos, track_epos, track_epos - track_spos);
+    LOGD(TAG,"sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
+    key_vector sample1;
+    key_vector sample2;
+    for(int i = 0; i < sample.size(); i++)
+    {
+        if(i < sample.size()/2) {
+            sample1.push_back(sample[i]);
+        } else {
+            sample2.push_back(sample[i]);
+        }
+    }
+    LOGD(TAG,"spliting samples: sz=%d sample2=%d\n",sample1.size(), sample2.size());
+    double secs_to_match1 = sample1.size()*sec_per_sample;
+    double secs_to_match2 = sample2.size()*sec_per_sample;
+    int shift_between_samples = sample1.size(); 
+    LOGD(TAG,"spliting samples: sec_to_match1=%f sec_to_match2=%f\n", secs_to_match1, secs_to_match2);
+    
+    int index1 = match_simple( track_spos, track_epos, secs_to_match1, track, sample1); 
+    int index2 = match_simple( track_spos, track_epos, secs_to_match2, track, sample2);
+    LOGD(TAG,"=== Found index1:%d (sec: %f) index2:%d (sec:%f) g_count:%d\n", 
+        index1, index1*sec_per_sample, index2, index2*sec_per_sample, g_count);
+    g_count = 0;
+    int diff = std::abs((index2 - index1) - shift_between_samples);
+    LOGD(TAG,"diff index2 - index1: %d (sec: %f)\n", diff, diff*sec_per_sample);
+    int index = (diff < 0.5 * keys_in_sec) ?  index1: 0;
+    return index;
 }
 
