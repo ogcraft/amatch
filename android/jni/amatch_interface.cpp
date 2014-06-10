@@ -845,7 +845,7 @@ SWIGEXPORT jstring JNICALL Java_amatch_1generated_amatch_1interfaceJNI_AMATCH_1V
   
   (void)jenv;
   (void)jcls;
-  result = (char *)("1.35c");
+  result = (char *)("1.35d");
   if (result) jresult = jenv->NewStringUTF((const char *)result);
   return jresult;
 }

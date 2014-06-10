@@ -18,16 +18,19 @@ amatch_interface.cpp \
 
 #LOCAL_SHARED_LIBRARIES := -L$(LOCAL_PATH)/../ext_libs/armabi -lsndfile
 
-#LOCAL_SHARED_LIBRARIES := -lsndfile
 
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/boost/include/boost-1_54
-LOCAL_LDLIBS += -L$(LOCAL_PATH)/boost/lib/ -lboost_system 
+#LOCAL_LDLIBS += -L$(LOCAL_PATH)/boost/lib/ -lboost_system-gcc-mt -lboost_thread-gcc-mt
+
+#LOCAL_STATIC_LIBRARIES := $(LOCAL_PATH)/boost/lib/libboost_system-gcc-mt-1_54.a $(LOCAL_PATH)/boost/lib/libboost_thread-gcc-mt-1_54.a
 
 LOCAL_CPPFLAGS += -fexceptions -fpermissive
 LOCAL_CPPFLAGS += -frtti
 
 #LOCAL_LDLIBS := -llog -lOpenSLES 
-LOCAL_LDLIBS := -llog
+LOCAL_LDLIBS := -llog -Lext_libs/armeabi -lsndfile -lfftw3 $(LOCAL_PATH)/boost/lib/libboost_system-gcc-mt-1_54.a $(LOCAL_PATH)/boost/lib/libboost_thread-gcc-mt-1_54.a $(ANDROID_NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a/libgnustl_static.a
+
 
 include $(BUILD_SHARED_LIBRARY)
+
 #include $(BUILD_EXECUTABLE)

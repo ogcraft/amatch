@@ -14,6 +14,8 @@
 #include "amatch.h"
 #include "sigproc.h"
 
+#include <boost/thread.hpp>
+
 #include "logging.h"
 extern const char* TAG;
 
@@ -247,7 +249,7 @@ double match_sample_simple(size_t ti, size_t si, int msize, const key_vector& tr
 //    return 0;
 //}
 
-int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& track, const key_vector& sample) 
+void match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& track, const key_vector& sample, int& index) 
 {
     unsigned msize = (unsigned)(match_sec * keys_in_sec);
     int len = ie - is;
@@ -260,10 +262,12 @@ int match_simple( size_t is,  size_t ie, double match_sec,  const key_vector& tr
         double dd =  d/(m/i); 
         if(dd > 1.7) {
             LOGD(TAG,"Found: index: %d dd:%f\n", i, dd);
-            return i;
+            index = i;
+            return;
         }
     }
-    return 0;
+    index = 0;
+    return;
 }
 
 int match_single_sample(const key_vector& track, const key_vector& sample, 
@@ -285,7 +289,8 @@ int match_single_sample(const key_vector& track, const key_vector& sample,
     LOGD(TAG,"sample_spos: %d sample_epos: %d total: %d\n", sample_spos, sample_epos, sample_epos - sample_spos);
     diff_vector diff1;
     diff_vector diff2;
-    int index = match_simple( track_spos, track_epos, secs_to_match, track, sample); 
+    int index = 0;
+    match_simple( track_spos, track_epos, secs_to_match, track, sample, index); 
     //LOGD(TAG,"=== Found sec: %f index:%d g_count:%d\n", index*sec_per_sample, index, g_count);
     return index;
 }
@@ -315,6 +320,7 @@ bool match_single_sample_double_pass(const key_vector& track, const key_vector& 
                       secs_to_match, track_ssec, diff1, diff2);
     return ret;
 }
+
 
 int match_single_sample_mt(const key_vector& track, const key_vector& sample, 
                         double track_ssec, double track_esec, 
@@ -349,8 +355,19 @@ int match_single_sample_mt(const key_vector& track, const key_vector& sample,
     int shift_between_samples = sample1.size(); 
     LOGD(TAG,"spliting samples: sec_to_match1=%f sec_to_match2=%f\n", secs_to_match1, secs_to_match2);
     
-    int index1 = match_simple( track_spos, track_epos, secs_to_match1, track, sample1); 
-    int index2 = match_simple( track_spos, track_epos, secs_to_match2, track, sample2);
+    int index1 = 0;
+    //match_simple( track_spos, track_epos, secs_to_match1, track, sample1, index1); 
+    
+    boost::thread match_simple_thread1(
+        ::match_simple, track_spos, track_epos, secs_to_match1, track, sample1, boost::ref(index1));
+    
+    int index2 = 0;
+    boost::thread match_simple_thread2(
+        ::match_simple, track_spos, track_epos, secs_to_match2, track, sample2, boost::ref(index2));
+    
+    match_simple_thread1.join();
+    match_simple_thread2.join();
+
     LOGD(TAG,"=== Found index1:%d (sec: %f) index2:%d (sec:%f) g_count:%d\n", 
         index1, index1*sec_per_sample, index2, index2*sec_per_sample, g_count);
     g_count = 0;
