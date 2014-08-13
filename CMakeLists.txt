@@ -56,40 +56,40 @@ add_library( libamatch STATIC
 	src/filters.cpp
 )
 
-add_executable (amatch_sample 
-	bin/amatch_sample.cpp 
-    )
+#add_executable (amatch_sample 
+#	bin/amatch_sample.cpp 
+#    )
 
-add_executable (amatch_sample_double 
-	bin/amatch_sample_double.cpp 
-    )
+#add_executable (amatch_sample_double 
+#	bin/amatch_sample_double.cpp 
+#    )
 
-target_link_libraries ( amatch_sample
-	libamatch
-    fftw3
-    sndfile
-	)   
+#target_link_libraries ( amatch_sample
+#	libamatch
+#    fftw3
+#    sndfile
+#	)   
 
-target_link_libraries ( amatch_sample_double
-	libamatch
-    fftw3
-    sndfile
-	)   
+#target_link_libraries ( amatch_sample_double
+#	libamatch
+#    fftw3
+#    sndfile
+#	)   
 
 add_executable (generate_fpkeys 
 	bin/generate_fpkeys.cpp 
 	)
 
 
-add_executable (split_silence 
-    bin/split_silence.cpp 
-    )
+#add_executable (split_silence 
+#    bin/split_silence.cpp 
+#    )
 
-target_link_libraries ( split_silence
-    libamatch
-    fftw3
-    sndfile
-    )
+#target_link_libraries ( split_silence
+#    libamatch
+#    fftw3
+#    sndfile
+#    )
 
 
 if(WIN32)

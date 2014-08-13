@@ -1,8 +1,3 @@
-/*
-Author: Yan Ke
-August 2004
-*/
-
 #include <complex>
 #include <fftw3.h>
 #include <stdio.h>
@@ -12,6 +7,8 @@ August 2004
 #include <sndfile.h>
 #include <stdint.h>
 #include <math.h>
+#include <limits.h>
+#include <string.h>
 
 using namespace std;
 

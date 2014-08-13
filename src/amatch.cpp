@@ -16,8 +16,13 @@
 
 #include <boost/thread.hpp>
 
+#ifdef ANDROID
 #include "logging.h"
 extern const char* TAG;
+#else
+extern const char* TAG;
+#define LOGD(LOG_TAG, ...) printf(__VA_ARGS__);
+#endif
 
 #define all(C) C.begin(),C.end()
 #define PRINTDIFFVEC( v ) {diff_vector::iterator it;for(it=v.begin();it!=v.end();++it){std::cout << it->first <<","<<it->second<<" ";};std::cout<<std::endl;}
