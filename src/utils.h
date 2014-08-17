@@ -41,8 +41,8 @@ inline unsigned int bit_count(unsigned int x)
 
 /* Open stereo file and place channels in rows of a matrix */
 //void spectrogram(const arma::mat& S, int window_sz, int hop_sz, arma::mat& result);
-void writebits(unsigned int bits[], unsigned int nbits, const char * fn);
-void writekeys(const key_vector keys, const char* fn);
+void write_bits(unsigned int bits[], unsigned int nbits, const char * filename);
+void write_keys(const key_vector keys, const char* filename);
 
 double time_now();
 

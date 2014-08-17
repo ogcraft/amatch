@@ -120,7 +120,7 @@ int generate_fpkeys(const std::string& wavfn)
 	string bitfilename(wavfn);
 	bitfilename.replace(wavfn.find(".wav"), 4,".fpkeys");
 	printf("Writing %d keys to '%s'\n", nbits, bitfilename.c_str());
-	writebits(bits, nbits, bitfilename.c_str());
+	write_bits(bits, nbits, bitfilename.c_str());
 #if 0
 	for (unsigned int i = 0; i < 100 /* nbits */; i++) {
 		std::bitset<32> b(bits[i]);
