@@ -1,0 +1,1 @@
+nmake generate_fpkeys

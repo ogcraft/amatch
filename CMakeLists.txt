@@ -44,17 +44,17 @@ else(WIN32)
 endif(WIN32)
 
 
-add_library( libamatch STATIC 
-    include/amatch.h
-    src/asearch.cpp
-    src/amatch.cpp
-	src/utils.h
-	src/utils.cpp
-	src/sigproc.h
-	src/sigproc.cpp
-	src/filters.h
-	src/filters.cpp
-)
+#add_library( libamatch STATIC 
+#    include/amatch.h
+#    src/asearch.cpp
+#    src/amatch.cpp
+#	src/utils.h
+#	src/utils.cpp
+#	src/sigproc.h
+#	src/sigproc.cpp
+#	src/filters.h
+#	src/filters.cpp
+#)
 
 #add_executable (amatch_sample 
 #	bin/amatch_sample.cpp 
@@ -77,7 +77,11 @@ add_library( libamatch STATIC
 #	)   
 
 add_executable (generate_fpkeys 
-	bin/generate_fpkeys.cpp 
+	bin/generate_fpkeys.cpp
+	src/asearch.cpp
+	src/utils.cpp
+	src/sigproc.cpp
+	src/filters.cpp
 	)
 
 
@@ -94,7 +98,7 @@ add_executable (generate_fpkeys
 
 if(WIN32)
     target_link_libraries ( generate_fpkeys
-            libamatch.lib
+	    #libamatch
             libfftw3-3 # win32
             libsndfile-1.lib # win32 
             #boost_iostreams 
@@ -102,7 +106,7 @@ if(WIN32)
             )   
 else(WIN32)
     target_link_libraries ( generate_fpkeys
-            libamatch
+	    #libamatch
             fftw3
             sndfile 
             #boost_iostreams 

@@ -7,9 +7,14 @@
 #include <bitset>         // std::bitset
 
 #include <sndfile.h>
-#include "amatch.h"
+//#include "amatch.h"
 #include "utils.h"
 #include "sigproc.h"
+
+void dump_snd_file_info(const char* fn);
+int generate_fpkeys(const std::string& wavfn); 
+
+const char* ver = "1.1";
 
 using namespace std;
 
@@ -21,6 +26,7 @@ int main(int argc, char* argv[])
 	std::cout << "Sndfile version: " << sndflile_ver << std::endl << std::endl;
 
 	if(argc < 2) {
+		std::cout << "generate_fpkey version: " << ver << std::endl;
 		std::cout << "Usage: " << argv[0] << " wav_file_name" << std::endl;
 		exit(1);
 	}
@@ -30,7 +36,7 @@ int main(int argc, char* argv[])
 
 	dump_snd_file_info(wavfile);
 
-    ret =  generate_fpkeys(wavfile); 
+    	ret =  generate_fpkeys(wavfile); 
 	
 	return ret;
 }
